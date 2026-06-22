@@ -20,6 +20,7 @@ Open Settings from the menu bar item and configure:
 - poll interval
 - Docker checks
 - app release repository, defaulting to `roughcoder/jarvis-swift-toolbar`
+- GitHub token for private-release checks, stored in Keychain
 
 ## Behavior
 
@@ -64,7 +65,14 @@ scripts/release_github.sh 0.1.0 --draft
 Remove `--draft` when you want the release visible. The release uploads the app
 zip, checksum, and `install_latest.sh` installer asset.
 
-Users can install the latest release with:
+For this private repository, authenticated installs can use `gh`:
+
+```bash
+gh release download --repo roughcoder/jarvis-swift-toolbar --pattern install_latest.sh --output /tmp/install_jarvis_menu_bar.sh
+bash /tmp/install_jarvis_menu_bar.sh
+```
+
+Public repositories can also install the latest release with:
 
 ```bash
 curl -fsSL https://github.com/roughcoder/jarvis-swift-toolbar/releases/latest/download/install_latest.sh | bash

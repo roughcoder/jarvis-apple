@@ -30,7 +30,7 @@ final class JarvisViewModel: ObservableObject {
     }
 
     var hasInstallableAppRelease: Bool {
-        latestAppRelease?.assetURL != nil
+        latestAppRelease?.assetURL != nil || latestAppRelease?.assetAPIURL != nil
     }
 
     func startPolling() async {
@@ -179,7 +179,10 @@ final class JarvisViewModel: ObservableObject {
         defer { isCheckingAppRelease = false }
 
         do {
-            let release = try await GitHubReleaseClient().latestRelease(repository: repository)
+            let release = try await GitHubReleaseClient().latestRelease(
+                repository: repository,
+                token: settings.appReleaseGitHubToken
+            )
             latestAppRelease = release
             if AppVersion.isRelease(release.tagName, newerThan: currentAppVersion) {
                 appReleaseStatus = "\(release.tagName) available"
@@ -205,7 +208,7 @@ final class JarvisViewModel: ObservableObject {
             return
         }
 
-        guard let assetURL = release.assetURL else {
+        guard release.assetURL != nil || release.assetAPIURL != nil else {
             openLatestAppRelease()
             return
         }
@@ -219,7 +222,10 @@ final class JarvisViewModel: ObservableObject {
         }
 
         do {
-            let (temporaryURL, _) = try await URLSession.shared.download(from: assetURL)
+            let temporaryURL = try await GitHubReleaseClient().downloadAsset(
+                for: release,
+                token: settings.appReleaseGitHubToken
+            )
             let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)
                 .first ?? FileManager.default.homeDirectoryForCurrentUser
             let targetName = release.assetName ?? "JarvisMenuBar-\(release.tagName)-macos.zip"

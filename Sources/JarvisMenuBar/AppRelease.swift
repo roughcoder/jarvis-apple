@@ -6,6 +6,7 @@ struct AppRelease: Equatable, Identifiable {
     let body: String
     let htmlURL: URL
     let assetName: String?
+    let assetAPIURL: URL?
     let assetURL: URL?
     let publishedAt: Date?
 

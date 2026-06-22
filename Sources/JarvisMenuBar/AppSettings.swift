@@ -8,6 +8,7 @@ struct JarvisConfiguration: Equatable {
     var pollInterval: TimeInterval
     var dockerChecksEnabled: Bool
     var appReleaseRepository: String
+    var appReleaseGitHubToken: String
 }
 
 @MainActor
@@ -43,10 +44,16 @@ final class AppSettings: ObservableObject {
         didSet { save() }
     }
 
-    private let defaults: UserDefaults
+    @Published var appReleaseGitHubToken: String {
+        didSet { saveGitHubToken() }
+    }
 
-    init(defaults: UserDefaults = .standard) {
+    private let defaults: UserDefaults
+    private let keychain: KeychainStore
+
+    init(defaults: UserDefaults = .standard, keychain: KeychainStore = .shared) {
         self.defaults = defaults
+        self.keychain = keychain
         jarvisRepoPath = defaults.string(forKey: Keys.jarvisRepoPath)
             ?? Self.defaultJarvisRepoPath
         uvPath = defaults.string(forKey: Keys.uvPath)
@@ -60,6 +67,7 @@ final class AppSettings: ObservableObject {
         dockerChecksEnabled = defaults.object(forKey: Keys.dockerChecksEnabled) as? Bool ?? true
         appReleaseRepository = defaults.string(forKey: Keys.appReleaseRepository)
             ?? "roughcoder/jarvis-swift-toolbar"
+        appReleaseGitHubToken = keychain.read(service: Keys.keychainService, account: Keys.githubTokenAccount) ?? ""
     }
 
     var configuration: JarvisConfiguration {
@@ -70,7 +78,8 @@ final class AppSettings: ObservableObject {
             installedRoles: installedRoles,
             pollInterval: pollInterval,
             dockerChecksEnabled: dockerChecksEnabled,
-            appReleaseRepository: appReleaseRepository
+            appReleaseRepository: appReleaseRepository,
+            appReleaseGitHubToken: appReleaseGitHubToken
         )
     }
 
@@ -92,6 +101,14 @@ final class AppSettings: ObservableObject {
         defaults.set(appReleaseRepository, forKey: Keys.appReleaseRepository)
     }
 
+    private func saveGitHubToken() {
+        keychain.write(
+            appReleaseGitHubToken.trimmingCharacters(in: .whitespacesAndNewlines),
+            service: Keys.keychainService,
+            account: Keys.githubTokenAccount
+        )
+    }
+
     private enum Keys {
         static let jarvisRepoPath = "jarvisRepoPath"
         static let uvPath = "uvPath"
@@ -100,6 +117,8 @@ final class AppSettings: ObservableObject {
         static let pollInterval = "pollInterval"
         static let dockerChecksEnabled = "dockerChecksEnabled"
         static let appReleaseRepository = "appReleaseRepository"
+        static let keychainService = "com.jarvis.menubar"
+        static let githubTokenAccount = "github-release-token"
     }
 
     private static var defaultJarvisRepoPath: String {

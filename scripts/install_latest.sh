@@ -20,8 +20,25 @@ trap cleanup EXIT
 ZIP_PATH="$TMP_DIR/$ASSET_NAME"
 URL="https://github.com/$REPO/releases/latest/download/$ASSET_NAME"
 
-echo "Downloading $URL"
-/usr/bin/curl -fL "$URL" -o "$ZIP_PATH"
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+  echo "Downloading $ASSET_NAME from $REPO with gh"
+  gh release download --repo "$REPO" --pattern "$ASSET_NAME" --dir "$TMP_DIR" --clobber
+elif [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  echo "Downloading $ASSET_NAME from $REPO with GITHUB_TOKEN"
+  ASSET_ID="$(/usr/bin/curl -fsSL \
+    -H "Authorization: Bearer $GITHUB_TOKEN" \
+    -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/$REPO/releases/latest" \
+    | /usr/bin/python3 -c 'import json,sys; data=json.load(sys.stdin); print(next(a["id"] for a in data["assets"] if a["name"] == "JarvisMenuBar-macos.zip"))')"
+  /usr/bin/curl -fL \
+    -H "Authorization: Bearer $GITHUB_TOKEN" \
+    -H "Accept: application/octet-stream" \
+    "https://api.github.com/repos/$REPO/releases/assets/$ASSET_ID" \
+    -o "$ZIP_PATH"
+else
+  echo "Downloading $URL"
+  /usr/bin/curl -fL "$URL" -o "$ZIP_PATH"
+fi
 
 echo "Unpacking $APP_NAME"
 /usr/bin/ditto -x -k "$ZIP_PATH" "$TMP_DIR"

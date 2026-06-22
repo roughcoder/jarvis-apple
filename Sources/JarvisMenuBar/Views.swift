@@ -362,7 +362,9 @@ struct SettingsView: View {
             Section("App releases") {
                 TextField("GitHub repo", text: $settings.appReleaseRepository)
                     .textFieldStyle(.roundedBorder)
-                Text("Use owner/repo, for example neilbarton/jarvis-swift-toolbar.")
+                SecureField("GitHub token for private releases", text: $settings.appReleaseGitHubToken)
+                    .textFieldStyle(.roundedBorder)
+                Text("Use owner/repo, for example roughcoder/jarvis-swift-toolbar. Private repositories need a token with repo release read access.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
