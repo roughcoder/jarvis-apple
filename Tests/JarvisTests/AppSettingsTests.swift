@@ -27,6 +27,17 @@ final class AppSettingsTests: XCTestCase {
     }
 
     @MainActor
+    func testPersistsPairingBrainHost() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = AppSettings(defaults: defaults, keychain: KeychainStore())
+        settings.pairingBrainHost = " imac.private "
+
+        XCTAssertEqual(defaults.string(forKey: "pairingBrainHost"), "imac.private")
+    }
+
+    @MainActor
     func testAutoOpensSetupForFreshInstallOnce() {
         let (defaults, suiteName) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

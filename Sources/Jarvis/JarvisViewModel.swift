@@ -255,9 +255,9 @@ final class JarvisViewModel: ObservableObject {
 
         do {
             let issue = try await JarvisClient(configuration: settings.configuration)
-                .issuePairing(deviceID: deviceID, identity: pairingIdentity)
+                .issuePairing(deviceID: deviceID, identity: pairingIdentity, brainHost: settings.pairingBrainHost)
             latestPairingIssue = issue
-            lastCommandOutput = """
+            var output = """
             Pairing token issued for \(deviceID).
 
             Token:
@@ -266,6 +266,14 @@ final class JarvisViewModel: ObservableObject {
             BRAIN_DEVICES entry:
             \(issue.brainDevicesEntry)
             """
+            if let piInstallerCommand = issue.piInstallerCommand {
+                output += """
+
+                Raspberry Pi install command:
+                \(piInstallerCommand)
+                """
+            }
+            lastCommandOutput = output
             activeOperation = nil
         } catch {
             activeOperation = nil
@@ -281,6 +289,15 @@ final class JarvisViewModel: ObservableObject {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(latestPairingIssue.brainDevicesEntry, forType: .string)
         lastCommandOutput = "Copied BRAIN_DEVICES entry to the clipboard."
+    }
+
+    func copyLatestPiInstallerCommand() {
+        guard let piInstallerCommand = latestPairingIssue?.piInstallerCommand else {
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(piInstallerCommand, forType: .string)
+        lastCommandOutput = "Copied Raspberry Pi install command to the clipboard."
     }
 
     func openJarvisRepo() {

@@ -348,6 +348,12 @@ struct SetupGuideView: View {
                     TextField("optional personal owner", text: $viewModel.pairingIdentity)
                         .textFieldStyle(.roundedBorder)
                 }
+                GridRow {
+                    Text("Brain host")
+                        .font(.caption.weight(.semibold))
+                    TextField("imac.private", text: $settings.pairingBrainHost)
+                        .textFieldStyle(.roundedBorder)
+                }
             }
 
             HStack(spacing: 10) {
@@ -365,17 +371,23 @@ struct SetupGuideView: View {
                     Label("Copy Entry", systemImage: "doc.on.doc")
                 }
                 .disabled(viewModel.latestPairingIssue == nil)
+
+                Button {
+                    viewModel.copyLatestPiInstallerCommand()
+                } label: {
+                    Label("Copy Pi Command", systemImage: "terminal")
+                }
+                .disabled(viewModel.latestPairingIssue?.piInstallerCommand == nil)
             }
             .buttonStyle(.bordered)
 
             if let latestPairingIssue = viewModel.latestPairingIssue {
-                Text(latestPairingIssue.brainDevicesEntry)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(nsColor: .textBackgroundColor))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                VStack(alignment: .leading, spacing: 8) {
+                    PairingOutputBlock(text: latestPairingIssue.brainDevicesEntry)
+                    if let piInstallerCommand = latestPairingIssue.piInstallerCommand {
+                        PairingOutputBlock(text: piInstallerCommand)
+                    }
+                }
             }
         }
     }
@@ -389,6 +401,20 @@ struct SetupGuideView: View {
         case .worker:
             "Browser, GUI, shell, and coding worker for this Mac."
         }
+    }
+}
+
+struct PairingOutputBlock: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.system(.caption, design: .monospaced))
+            .textSelection(.enabled)
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(nsColor: .textBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 

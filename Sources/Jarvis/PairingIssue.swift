@@ -24,11 +24,16 @@ enum PairingIssueParser {
             throw ParseError.missingFields(String(data: data, encoding: .utf8) ?? "")
         }
 
-        return PairingIssue(token: token, brainDevicesEntry: entry)
+        return PairingIssue(
+            token: token,
+            brainDevicesEntry: entry,
+            piInstallerCommand: root.string("pi_installer_command")
+        )
     }
 }
 
 struct PairingIssue: Equatable {
     let token: String
     let brainDevicesEntry: String
+    let piInstallerCommand: String?
 }

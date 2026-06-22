@@ -170,13 +170,8 @@ struct JarvisClient {
         return arguments
     }
 
-    func issuePairing(deviceID: String, identity: String = "") async throws -> PairingIssue {
-        var arguments = ["pair", deviceID, "--json"]
-        let trimmedIdentity = identity.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedIdentity.isEmpty {
-            arguments.append(contentsOf: ["--identity", trimmedIdentity])
-        }
-
+    func issuePairing(deviceID: String, identity: String = "", brainHost: String = "") async throws -> PairingIssue {
+        let arguments = pairingArguments(deviceID: deviceID, identity: identity, brainHost: brainHost)
         let result = try await runJarvis(arguments: arguments, timeout: 15)
         guard result.succeeded else {
             throw JarvisClientError.commandFailed(result)
@@ -190,6 +185,19 @@ struct JarvisClient {
         } catch {
             throw JarvisClientError.invalidPairingJSON(result.stdout)
         }
+    }
+
+    func pairingArguments(deviceID: String, identity: String = "", brainHost: String = "") -> [String] {
+        var arguments = ["pair", deviceID, "--json"]
+        let trimmedIdentity = identity.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedIdentity.isEmpty {
+            arguments.append(contentsOf: ["--identity", trimmedIdentity])
+        }
+        let trimmedBrainHost = brainHost.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedBrainHost.isEmpty {
+            arguments.append(contentsOf: ["--pi-installer", "--brain-host", trimmedBrainHost])
+        }
+        return arguments
     }
 
     func runUV(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {

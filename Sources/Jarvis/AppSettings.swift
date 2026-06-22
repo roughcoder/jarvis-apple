@@ -34,6 +34,10 @@ final class AppSettings: ObservableObject {
         didSet { save() }
     }
 
+    @Published var pairingBrainHost: String {
+        didSet { save() }
+    }
+
     @Published var pollInterval: TimeInterval {
         didSet {
             pollInterval = max(2, min(pollInterval, 300))
@@ -69,6 +73,7 @@ final class AppSettings: ObservableObject {
             ?? "~/Library/Logs/Jarvis"
         let roleNames = defaults.stringArray(forKey: Keys.installedRoles) ?? []
         installedRoles = Set(roleNames.compactMap(JarvisRole.init(rawValue:)))
+        pairingBrainHost = defaults.string(forKey: Keys.pairingBrainHost) ?? ""
         let storedPollInterval = defaults.double(forKey: Keys.pollInterval)
         pollInterval = storedPollInterval > 0 ? storedPollInterval : 5
         dockerChecksEnabled = defaults.object(forKey: Keys.dockerChecksEnabled) as? Bool ?? true
@@ -114,6 +119,7 @@ final class AppSettings: ObservableObject {
         defaults.set(uvPath, forKey: Keys.uvPath)
         defaults.set(logsPath, forKey: Keys.logsPath)
         defaults.set(installedRoles.map(\.rawValue).sorted(), forKey: Keys.installedRoles)
+        defaults.set(pairingBrainHost.trimmingCharacters(in: .whitespacesAndNewlines), forKey: Keys.pairingBrainHost)
         defaults.set(pollInterval, forKey: Keys.pollInterval)
         defaults.set(dockerChecksEnabled, forKey: Keys.dockerChecksEnabled)
         defaults.set(appReleaseRepository, forKey: Keys.appReleaseRepository)
@@ -133,6 +139,7 @@ final class AppSettings: ObservableObject {
         static let uvPath = "uvPath"
         static let logsPath = "logsPath"
         static let installedRoles = "installedRoles"
+        static let pairingBrainHost = "pairingBrainHost"
         static let pollInterval = "pollInterval"
         static let dockerChecksEnabled = "dockerChecksEnabled"
         static let appReleaseRepository = "appReleaseRepository"

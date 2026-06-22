@@ -39,6 +39,32 @@ final class JarvisClientTests: XCTestCase {
         XCTAssertEqual(client.serviceInstallArguments(role: .worker), ["service", "install", "worker"])
     }
 
+    func testPairingArgumentsIncludePiInstallerWhenBrainHostIsSet() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+
+        XCTAssertEqual(
+            client.pairingArguments(deviceID: "room-pi", identity: "neil", brainHost: " imac.private "),
+            ["pair", "room-pi", "--json", "--identity", "neil", "--pi-installer", "--brain-host", "imac.private"]
+        )
+    }
+
+    func testPairingArgumentsOmitPiInstallerWhenBrainHostIsBlank() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+
+        XCTAssertEqual(
+            client.pairingArguments(deviceID: "room-pi", identity: "", brainHost: " "),
+            ["pair", "room-pi", "--json"]
+        )
+    }
+
     private func configuration(
         jarvisRepoPath: String,
         jarvisPath: String,
