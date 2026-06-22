@@ -13,7 +13,8 @@ operations UI without becoming a second macOS app.
 
 - App display name: `Jarvis`
 - Swift package and executable product: `Jarvis`
-- Bundle identifier: `dev.infinitestack.jarvis`
+- macOS bundle identifier: `dev.infinitestack.jarvis.mac`
+- Future iOS bundle identifier: `dev.infinitestack.jarvis.ios`
 - Release asset: `Jarvis-macos.zip`
 - Release repository: `roughcoder/jarvis-apple`
 - Future Homebrew tap: `roughcoder/homebrew-infinite-stack`
@@ -148,7 +149,7 @@ Self-update test:
 2. Publish a newer release:
 
    ```bash
-   scripts/release_github.sh 0.2.1
+   scripts/release_github.sh 0.2.3
    ```
 
 3. On the second Mac, open the Jarvis menu bar item.
