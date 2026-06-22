@@ -35,7 +35,7 @@ Open Settings from the menu bar item and configure:
 - poll interval
 - Docker checks
 - app release repository, defaulting to `roughcoder/jarvis-apple`
-- GitHub token for private-release checks, stored in Keychain
+- optional GitHub token for non-public release checks, stored in Keychain
 
 ## Behavior
 
@@ -129,6 +129,8 @@ that path needs admin permission, it automatically installs to `~/Applications`.
 Override the target when needed:
 
 ```bash
+curl -fsSL https://github.com/roughcoder/jarvis-apple/releases/latest/download/install_latest.sh \
+  -o /tmp/install_jarvis.sh
 JARVIS_INSTALL_DIR="$HOME/Applications" bash /tmp/install_jarvis.sh
 ```
 
@@ -172,7 +174,7 @@ brew install --HEAD jarvis
 brew install --cask jarvis-app
 xattr -dr com.apple.quarantine /Applications/Jarvis.app
 brew update
-brew upgrade jarvis
+brew upgrade --fetch-HEAD jarvis
 brew upgrade --cask jarvis-app
 xattr -dr com.apple.quarantine /Applications/Jarvis.app
 ```
