@@ -186,8 +186,10 @@ The Homebrew tap is a private tap that can hold multiple Infinite Stack tools:
 brew tap roughcoder/infinite-stack git@github.com:roughcoder/homebrew-infinite-stack.git
 brew trust --tap roughcoder/infinite-stack
 export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
-brew install --cask --no-quarantine jarvis-app
+brew install --cask jarvis-app
+xattr -dr com.apple.quarantine /Applications/Jarvis.app
 brew upgrade --cask jarvis-app
+xattr -dr com.apple.quarantine /Applications/Jarvis.app
 ```
 
 For normal releases, `scripts/release_github.sh <version>` updates the cask
@@ -195,6 +197,9 @@ after the GitHub release is published. Homebrew should own app updates on
 machines installed with Homebrew. The in-app updater can remain for direct
 installs, but Brew-managed installs should show update guidance instead of
 replacing the `.app` bundle behind Brew's back.
+
+The quarantine removal is only needed during the private testing phase, while
+Jarvis is ad-hoc signed instead of Developer ID signed and notarized.
 
 ## Test
 

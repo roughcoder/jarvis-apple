@@ -137,7 +137,7 @@ Confidence: high
 Scope-risk: narrow
 Directive: update version, sha256, and release asset API URL together for every Jarvis app release
 Tested: brew style --cask $TAP_NAME/$CASK_TOKEN; brew audit --cask $TAP_NAME/$CASK_TOKEN; brew fetch --cask --force $TAP_NAME/$CASK_TOKEN
-Not-tested: brew install --cask --no-quarantine $CASK_TOKEN"
+Not-tested: brew install --cask $CASK_TOKEN followed by quarantine removal"
 else
   echo "$CASK_TOKEN is already up to date for $TAG."
 fi

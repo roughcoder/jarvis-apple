@@ -130,6 +130,11 @@ struct HomebrewAppUpdater {
     echo "Upgrading $CASK_TOKEN"
     "$BREW_PATH" upgrade --cask "$CASK_TOKEN"
 
+    if [[ -d "$TARGET_APP" ]]; then
+      echo "Clearing quarantine attribute from $TARGET_APP"
+      /usr/bin/xattr -dr com.apple.quarantine "$TARGET_APP" >/dev/null 2>&1 || true
+    fi
+
     echo "Reopening $TARGET_APP"
     /usr/bin/open "$TARGET_APP" || /usr/bin/open -a "$APP_NAME"
     /bin/rm -rf "$WORK_DIR"

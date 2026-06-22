@@ -3,7 +3,7 @@ import Foundation
 enum AppIdentity {
     static let displayName = "Jarvis"
     static let executableName = "Jarvis"
-    static let menuBarSymbolName = "robot"
+    static let menuBarSymbolName = "brain.head.profile"
     static let macOSBundleIdentifier = "dev.infinitestack.jarvis.mac"
     static let iOSBundleIdentifier = "dev.infinitestack.jarvis.ios"
     static let bundleIdentifier = macOSBundleIdentifier
