@@ -4,13 +4,20 @@ set -euo pipefail
 PLACEHOLDER_REPO="__""REPOSITORY__"
 DEFAULT_REPO="__REPOSITORY__"
 REPO="${JARVIS_MENU_BAR_REPO:-$DEFAULT_REPO}"
-INSTALL_DIR="${JARVIS_MENU_BAR_INSTALL_DIR:-/Applications}"
 APP_NAME="Jarvis Menu Bar.app"
 ASSET_NAME="JarvisMenuBar-macos.zip"
 
 if [[ "$REPO" == "$PLACEHOLDER_REPO" || -z "$REPO" ]]; then
   echo "Set JARVIS_MENU_BAR_REPO=owner/repo before running this installer." >&2
   exit 2
+fi
+
+if [[ -n "${JARVIS_MENU_BAR_INSTALL_DIR:-}" ]]; then
+  INSTALL_DIR="$JARVIS_MENU_BAR_INSTALL_DIR"
+elif [[ -w "/Applications" ]]; then
+  INSTALL_DIR="/Applications"
+else
+  INSTALL_DIR="$HOME/Applications"
 fi
 
 TMP_DIR="$(mktemp -d)"
@@ -54,6 +61,7 @@ echo "Stopping existing app if needed"
 /usr/bin/osascript -e 'tell application "Jarvis Menu Bar" to quit' >/dev/null 2>&1 || true
 
 mkdir -p "$INSTALL_DIR"
+echo "Using install directory $INSTALL_DIR"
 echo "Installing to $INSTALL_DIR/$APP_NAME"
 /usr/bin/ditto "$TMP_DIR/$APP_NAME" "$INSTALL_DIR/$APP_NAME"
 

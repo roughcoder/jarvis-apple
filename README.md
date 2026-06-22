@@ -104,6 +104,14 @@ gh release download v0.1.2 --repo roughcoder/jarvis-swift-toolbar --pattern inst
 bash "$tmpdir/install_latest.sh"
 ```
 
+The installer uses `/Applications` when it is writable. On managed laptops where
+that path needs admin permission, it automatically installs to `~/Applications`.
+Override the target when needed:
+
+```bash
+JARVIS_MENU_BAR_INSTALL_DIR="$HOME/Applications" bash "$tmpdir/install_latest.sh"
+```
+
 After the app opens:
 
 1. Open the Jarvis menu bar item.
