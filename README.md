@@ -17,8 +17,8 @@ operations UI without becoming a second macOS app.
 - Future iOS bundle identifier: `dev.infinitestack.jarvis.ios`
 - Release asset: `Jarvis-macos.zip`
 - Release repository: `roughcoder/jarvis-apple`
-- Future Homebrew tap: `roughcoder/homebrew-infinite-stack`
-- Future Homebrew cask: `jarvis`
+- Homebrew tap: `roughcoder/homebrew-infinite-stack`
+- Homebrew cask: `jarvis-app`
 
 ## Run
 
@@ -71,14 +71,25 @@ This creates:
 - `dist/Jarvis-macos.zip`
 - `dist/Jarvis-macos.zip.sha256`
 
-Create or update a GitHub Release:
+Create or update a GitHub Release and Homebrew cask:
+
+```bash
+scripts/release_github.sh 0.1.0
+```
+
+The release uploads the app zip, checksum, and `install_latest.sh` installer
+asset, then updates `roughcoder/homebrew-infinite-stack/Casks/jarvis-app.rb`.
+Draft releases skip Homebrew:
 
 ```bash
 scripts/release_github.sh 0.1.0 --draft
 ```
 
-Remove `--draft` when you want the release visible. The release uploads the app
-zip, checksum, and `install_latest.sh` installer asset.
+If you need to publish a GitHub Release without touching Homebrew:
+
+```bash
+scripts/release_github.sh 0.1.0 --skip-homebrew
+```
 
 For this private repository, authenticated installs can use `gh`:
 
@@ -164,19 +175,20 @@ If installation fails, the detached helper writes a temporary `install.log` unde
 
 ## Homebrew Direction
 
-The intended Homebrew shape is a private tap that can hold multiple Infinite
-Stack tools:
+The Homebrew tap is a private tap that can hold multiple Infinite Stack tools:
 
 ```bash
 brew tap roughcoder/infinite-stack git@github.com:roughcoder/homebrew-infinite-stack.git
-brew install --cask jarvis
-brew upgrade --cask jarvis
+export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
+brew install --cask --no-quarantine jarvis-app
+brew upgrade --cask jarvis-app
 ```
 
-Once the cask exists, Homebrew should own app updates on machines installed with
-Homebrew. The in-app updater can remain for direct installs, but Brew-managed
-installs should show update guidance instead of replacing the `.app` bundle
-behind Brew's back.
+For normal releases, `scripts/release_github.sh <version>` updates the cask
+after the GitHub release is published. Homebrew should own app updates on
+machines installed with Homebrew. The in-app updater can remain for direct
+installs, but Brew-managed installs should show update guidance instead of
+replacing the `.app` bundle behind Brew's back.
 
 ## Test
 

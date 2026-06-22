@@ -3,13 +3,15 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/release_github.sh <version> [--draft]
+Usage: scripts/release_github.sh <version> [--draft] [--skip-homebrew]
 
 Builds the macOS app locally, pushes the current branch and tag, then creates
 or updates a GitHub Release with the app zip, checksum, and installer script.
 
 Environment:
-  GITHUB_REPOSITORY=owner/repo   Override repository detection.
+  GITHUB_REPOSITORY=owner/repo     Override repository detection.
+  SKIP_HOMEBREW=1                  Do not update the Homebrew cask.
+  HOMEBREW_TAP_DIR=/path/to/tap    Override the local Homebrew tap checkout.
 
 Example:
   scripts/release_github.sh 0.1.0 --draft
@@ -30,9 +32,23 @@ fi
 shift || true
 
 DRAFT_FLAG=""
-if [[ "${1:-}" == "--draft" ]]; then
-  DRAFT_FLAG="--draft"
-fi
+SKIP_HOMEBREW="${SKIP_HOMEBREW:-0}"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --draft)
+      DRAFT_FLAG="--draft"
+      ;;
+    --skip-homebrew)
+      SKIP_HOMEBREW=1
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
 
 VERSION="${VERSION#v}"
 TAG="v$VERSION"
@@ -99,3 +115,11 @@ else
 fi
 
 echo "Released $TAG to https://github.com/$REPOSITORY/releases/tag/$TAG"
+
+if [[ -n "$DRAFT_FLAG" ]]; then
+  echo "Skipping Homebrew cask update for draft release $TAG."
+elif [[ "$SKIP_HOMEBREW" == "1" ]]; then
+  echo "Skipping Homebrew cask update because SKIP_HOMEBREW=1."
+else
+  "$ROOT_DIR/scripts/update_homebrew_cask.sh" "$VERSION" "$REPOSITORY"
+fi
