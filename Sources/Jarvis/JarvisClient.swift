@@ -32,6 +32,18 @@ struct FleetStatusResponse {
     let command: CommandResult
 }
 
+struct JarvisInvocation: Equatable {
+    let executable: String
+    let arguments: [String]
+    let currentDirectory: String?
+    let mode: RuntimeMode
+
+    enum RuntimeMode: Equatable {
+        case checkout
+        case installed
+    }
+}
+
 enum LaunchdAction {
     case start
     case restart
@@ -51,12 +63,12 @@ struct JarvisClient {
     var runner = CommandRunner()
 
     func fleetStatus(includeDocker: Bool) async throws -> FleetStatusResponse {
-        var arguments = ["run", "jarvis", "fleet-status", "--json"]
+        var arguments = ["fleet-status", "--json"]
         if !includeDocker {
             arguments.append("--no-docker")
         }
 
-        let result = try await runUV(arguments: arguments, timeout: includeDocker ? 30 : 12)
+        let result = try await runJarvis(arguments: arguments, timeout: includeDocker ? 30 : 12)
         guard result.succeeded else {
             throw JarvisClientError.commandFailed(result)
         }
@@ -147,20 +159,25 @@ struct JarvisClient {
     }
 
     func installService(role: JarvisRole) async throws -> CommandResult {
-        try await runUV(
-            arguments: ["run", "jarvis", "service", "install", role.rawValue],
-            timeout: 30
-        )
+        try await runJarvis(arguments: serviceInstallArguments(role: role), timeout: 30)
+    }
+
+    func serviceInstallArguments(role: JarvisRole) -> [String] {
+        var arguments = ["service", "install", role.rawValue]
+        if runtimeMode() == .installed {
+            arguments.append(contentsOf: ["--jarvis-bin", configuration.jarvisPath])
+        }
+        return arguments
     }
 
     func issuePairing(deviceID: String, identity: String = "") async throws -> PairingIssue {
-        var arguments = ["run", "jarvis", "pair", deviceID, "--json"]
+        var arguments = ["pair", deviceID, "--json"]
         let trimmedIdentity = identity.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedIdentity.isEmpty {
             arguments.append(contentsOf: ["--identity", trimmedIdentity])
         }
 
-        let result = try await runUV(arguments: arguments, timeout: 15)
+        let result = try await runJarvis(arguments: arguments, timeout: 15)
         guard result.succeeded else {
             throw JarvisClientError.commandFailed(result)
         }
@@ -182,6 +199,47 @@ struct JarvisClient {
             currentDirectory: configuration.jarvisRepoPath,
             timeout: timeout
         )
+    }
+
+    func runJarvis(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {
+        let invocation = jarvisInvocation(arguments: arguments)
+        return try await runner.run(
+            executable: invocation.executable,
+            arguments: invocation.arguments,
+            currentDirectory: invocation.currentDirectory,
+            timeout: timeout
+        )
+    }
+
+    func jarvisInvocation(arguments: [String]) -> JarvisInvocation {
+        if runtimeMode() == .checkout {
+            return JarvisInvocation(
+                executable: configuration.uvPath,
+                arguments: ["run", "jarvis"] + arguments,
+                currentDirectory: configuration.jarvisRepoPath,
+                mode: .checkout
+            )
+        }
+
+        return JarvisInvocation(
+            executable: configuration.jarvisPath,
+            arguments: arguments,
+            currentDirectory: nil,
+            mode: .installed
+        )
+    }
+
+    func runtimeMode() -> JarvisInvocation.RuntimeMode {
+        let repoPath = FilePath.expandingTilde(in: configuration.jarvisRepoPath)
+        let markers = [
+            "\(repoPath)/pyproject.toml",
+            "\(repoPath)/src/jarvis/cli.py"
+        ]
+        if markers.allSatisfy({ FileManager.default.fileExists(atPath: $0) }),
+           FileManager.default.isExecutableFile(atPath: FilePath.expandingTilde(in: configuration.uvPath)) {
+            return .checkout
+        }
+        return .installed
     }
 
     private func runSystem(

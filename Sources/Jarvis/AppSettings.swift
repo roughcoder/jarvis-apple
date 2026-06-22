@@ -2,6 +2,7 @@ import Foundation
 
 struct JarvisConfiguration: Equatable {
     var jarvisRepoPath: String
+    var jarvisPath: String
     var uvPath: String
     var logsPath: String
     var installedRoles: Set<JarvisRole>
@@ -14,6 +15,10 @@ struct JarvisConfiguration: Equatable {
 @MainActor
 final class AppSettings: ObservableObject {
     @Published var jarvisRepoPath: String {
+        didSet { save() }
+    }
+
+    @Published var jarvisPath: String {
         didSet { save() }
     }
 
@@ -56,6 +61,8 @@ final class AppSettings: ObservableObject {
         self.keychain = keychain
         jarvisRepoPath = defaults.string(forKey: Keys.jarvisRepoPath)
             ?? Self.defaultJarvisRepoPath
+        jarvisPath = defaults.string(forKey: Keys.jarvisPath)
+            ?? Self.defaultJarvisPath
         uvPath = defaults.string(forKey: Keys.uvPath)
             ?? Self.defaultUVPath
         logsPath = defaults.string(forKey: Keys.logsPath)
@@ -78,6 +85,7 @@ final class AppSettings: ObservableObject {
     var configuration: JarvisConfiguration {
         JarvisConfiguration(
             jarvisRepoPath: jarvisRepoPath,
+            jarvisPath: jarvisPath,
             uvPath: uvPath,
             logsPath: logsPath,
             installedRoles: installedRoles,
@@ -102,6 +110,7 @@ final class AppSettings: ObservableObject {
 
     private func save() {
         defaults.set(jarvisRepoPath, forKey: Keys.jarvisRepoPath)
+        defaults.set(jarvisPath, forKey: Keys.jarvisPath)
         defaults.set(uvPath, forKey: Keys.uvPath)
         defaults.set(logsPath, forKey: Keys.logsPath)
         defaults.set(installedRoles.map(\.rawValue).sorted(), forKey: Keys.installedRoles)
@@ -120,6 +129,7 @@ final class AppSettings: ObservableObject {
 
     private enum Keys {
         static let jarvisRepoPath = "jarvisRepoPath"
+        static let jarvisPath = "jarvisPath"
         static let uvPath = "uvPath"
         static let logsPath = "logsPath"
         static let installedRoles = "installedRoles"
@@ -146,5 +156,12 @@ final class AppSettings: ObservableObject {
             "/usr/local/bin/uv",
             "/usr/bin/uv"
         ].first { FileManager.default.isExecutableFile(atPath: $0) } ?? "/opt/homebrew/bin/uv"
+    }
+
+    private static var defaultJarvisPath: String {
+        [
+            "/opt/homebrew/bin/jarvis",
+            "/usr/local/bin/jarvis"
+        ].first { FileManager.default.isExecutableFile(atPath: $0) } ?? "/opt/homebrew/bin/jarvis"
     }
 }

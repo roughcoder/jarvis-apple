@@ -547,6 +547,7 @@ struct SettingsView: View {
         Form {
             Section("Paths") {
                 PathSettingRow(title: "Jarvis repo", path: $settings.jarvisRepoPath, selectsDirectory: true)
+                PathSettingRow(title: "jarvis command", path: $settings.jarvisPath, selectsDirectory: false)
                 PathSettingRow(title: "uv binary", path: $settings.uvPath, selectsDirectory: false)
                 PathSettingRow(title: "Logs", path: $settings.logsPath, selectsDirectory: true)
             }

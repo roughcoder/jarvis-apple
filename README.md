@@ -184,11 +184,11 @@ The Homebrew tap can hold multiple Infinite Stack tools:
 
 ```bash
 brew tap roughcoder/infinite-stack
-brew install --HEAD jarvis
+brew install jarvis
 brew install --cask jarvis-app
 xattr -dr com.apple.quarantine /Applications/Jarvis.app
 brew update
-brew upgrade --fetch-HEAD jarvis
+brew upgrade jarvis
 brew upgrade --cask jarvis-app
 xattr -dr com.apple.quarantine /Applications/Jarvis.app
 ```

@@ -10,6 +10,7 @@ final class AppSettingsTests: XCTestCase {
         let settings = AppSettings(defaults: defaults, keychain: KeychainStore())
 
         XCTAssertEqual(settings.appReleaseRepository, AppIdentity.releaseRepository)
+        XCTAssertFalse(settings.jarvisPath.isEmpty)
         XCTAssertNil(defaults.string(forKey: "appReleaseRepository"))
     }
 
