@@ -3,22 +3,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "JarvisSwiftToolbar",
+    name: "Jarvis",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "JarvisMenuBar", targets: ["JarvisMenuBar"])
+        .executable(name: "Jarvis", targets: ["Jarvis"])
     ],
     targets: [
         .executableTarget(
-            name: "JarvisMenuBar",
-            path: "Sources/JarvisMenuBar"
+            name: "Jarvis",
+            path: "Sources/Jarvis"
         ),
         .testTarget(
-            name: "JarvisMenuBarTests",
-            dependencies: ["JarvisMenuBar"],
-            path: "Tests/JarvisMenuBarTests"
+            name: "JarvisTests",
+            dependencies: ["Jarvis"],
+            path: "Tests/JarvisTests"
         )
     ]
 )

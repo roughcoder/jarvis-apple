@@ -1,5 +1,5 @@
 import XCTest
-@testable import JarvisMenuBar
+@testable import Jarvis
 
 final class RedactorTests: XCTestCase {
     func testRedactsSensitiveTextValues() {

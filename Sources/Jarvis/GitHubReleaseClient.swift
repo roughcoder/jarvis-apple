@@ -23,7 +23,7 @@ struct GitHubReleaseClient {
         let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest")!
         var request = URLRequest(url: url)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        request.setValue("JarvisMenuBar/\(AppVersion.current)", forHTTPHeaderField: "User-Agent")
+        request.setValue("\(AppIdentity.executableName)/\(AppVersion.current)", forHTTPHeaderField: "User-Agent")
         applyAuthorization(token, to: &request)
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -53,7 +53,7 @@ struct GitHubReleaseClient {
            let apiURL = release.assetAPIURL {
             var request = URLRequest(url: apiURL)
             request.setValue("application/octet-stream", forHTTPHeaderField: "Accept")
-            request.setValue("JarvisMenuBar/\(AppVersion.current)", forHTTPHeaderField: "User-Agent")
+            request.setValue("\(AppIdentity.executableName)/\(AppVersion.current)", forHTTPHeaderField: "User-Agent")
             applyAuthorization(token, to: &request)
             let (url, response) = try await URLSession.shared.download(for: request)
             if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
@@ -137,8 +137,9 @@ private struct GitHubReleaseAsset: Decodable {
 
 private extension Array where Element == GitHubReleaseAsset {
     var preferredInstallAsset: GitHubReleaseAsset? {
-        first { $0.name == "JarvisMenuBar-macos.zip" }
-            ?? first { $0.name.localizedCaseInsensitiveContains("JarvisMenuBar") && $0.name.hasSuffix(".zip") }
+        first { $0.name == AppIdentity.releaseAssetName }
+            ?? first { $0.name == AppIdentity.legacyReleaseAssetName }
+            ?? first { $0.name.localizedCaseInsensitiveContains("Jarvis") && $0.name.hasSuffix(".zip") }
             ?? first { $0.name.hasSuffix(".dmg") }
             ?? first { $0.name.hasSuffix(".zip") }
     }

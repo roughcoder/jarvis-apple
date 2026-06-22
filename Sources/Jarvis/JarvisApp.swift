@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @main
-struct JarvisMenuBarApp: App {
+struct JarvisApp: App {
     @StateObject private var settings: AppSettings
     @StateObject private var viewModel: JarvisViewModel
 

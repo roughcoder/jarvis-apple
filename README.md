@@ -1,14 +1,29 @@
-# Jarvis Menu Bar
+# Jarvis
 
-Native macOS menu bar app for observing and safely controlling local Jarvis roles.
+Native macOS app for observing and safely controlling local Jarvis roles.
 
 The app intentionally shells out to the installed Jarvis checkout instead of embedding
 Jarvis brain, intercom, worker, memory, gateway, or capability logic.
 
+The current first surface is a menu bar operator panel. The product name is
+broader on purpose: the same `.app` can grow into a full desktop chat and
+operations UI without becoming a second macOS app.
+
+## Project Identity
+
+- App display name: `Jarvis`
+- Swift package and executable product: `Jarvis`
+- Bundle identifier: `dev.infinitestack.jarvis`
+- Release asset: `Jarvis-macos.zip`
+- Current release repository: `roughcoder/jarvis-swift-toolbar`
+- Future preferred repository name: `roughcoder/jarvis-macos` or `roughcoder/jarvis`
+- Future Homebrew tap: `roughcoder/homebrew-infinite-stack`
+- Future Homebrew cask: `jarvis`
+
 ## Run
 
 ```bash
-swift run JarvisMenuBar
+swift run Jarvis
 ```
 
 Open Settings from the menu bar item and configure:
@@ -34,13 +49,13 @@ Open Settings from the menu bar item and configure:
 
 ## Release Loop
 
-Initialize the GitHub repository once:
+Initialize the GitHub repository once, if you are starting from a fresh checkout:
 
 ```bash
 git init -b main
 git remote add origin git@github.com:roughcoder/jarvis-swift-toolbar.git
 git add Package.swift README.md Sources Tests scripts .gitignore
-git commit -m "Establish Jarvis menu bar release loop"
+git commit -m "Establish Jarvis macOS release loop"
 git push -u origin main
 ```
 
@@ -52,9 +67,9 @@ scripts/build_release.sh 0.1.0
 
 This creates:
 
-- `dist/Jarvis Menu Bar.app`
-- `dist/JarvisMenuBar-macos.zip`
-- `dist/JarvisMenuBar-macos.zip.sha256`
+- `dist/Jarvis.app`
+- `dist/Jarvis-macos.zip`
+- `dist/Jarvis-macos.zip.sha256`
 
 Create or update a GitHub Release:
 
@@ -68,8 +83,8 @@ zip, checksum, and `install_latest.sh` installer asset.
 For this private repository, authenticated installs can use `gh`:
 
 ```bash
-gh release download --repo roughcoder/jarvis-swift-toolbar --pattern install_latest.sh --output /tmp/install_jarvis_menu_bar.sh
-bash /tmp/install_jarvis_menu_bar.sh
+gh release download --repo roughcoder/jarvis-swift-toolbar --pattern install_latest.sh --output /tmp/install_jarvis.sh
+bash /tmp/install_jarvis.sh
 ```
 
 Public repositories can also install the latest release with:
@@ -78,7 +93,7 @@ Public repositories can also install the latest release with:
 curl -fsSL https://github.com/roughcoder/jarvis-swift-toolbar/releases/latest/download/install_latest.sh | bash
 ```
 
-Once installed as `Jarvis Menu Bar.app`, the menu can update itself from the App
+Once installed as `Jarvis.app`, the menu can update itself from the App
 Release section. It downloads the latest release zip, starts a detached installer
 helper, quits the app, replaces the current `.app` bundle, and reopens the new
 version. Self-update is disabled when running through `swift run`.
@@ -109,7 +124,7 @@ that path needs admin permission, it automatically installs to `~/Applications`.
 Override the target when needed:
 
 ```bash
-JARVIS_MENU_BAR_INSTALL_DIR="$HOME/Applications" bash "$tmpdir/install_latest.sh"
+JARVIS_INSTALL_DIR="$HOME/Applications" bash "$tmpdir/install_latest.sh"
 ```
 
 After the app opens:
@@ -121,8 +136,13 @@ After the app opens:
 5. Configure the Jarvis repo path, `uv` path, logs path, and installed roles for
    that Mac.
 6. Close Settings.
-7. Use App Release -> Check. On `v0.1.2`, it should report up to date until a
+7. Use App Release -> Check. On the current release, it should report up to date until a
    newer release exists.
+
+If an older `Jarvis Menu Bar.app` is already installed, quit it and remove that
+old app bundle after `Jarvis.app` opens successfully. The project now uses one
+broader app name so future menu bar and desktop-chat surfaces can live inside the
+same macOS app.
 
 Self-update test:
 
@@ -130,18 +150,34 @@ Self-update test:
 2. Publish a newer release:
 
    ```bash
-   scripts/release_github.sh 0.1.3
+   scripts/release_github.sh 0.2.1
    ```
 
 3. On the second Mac, open the Jarvis menu bar item.
 4. Use App Release -> Check.
-5. Confirm it reports `v0.1.3 available`.
+5. Confirm it reports the new version is available.
 6. Use App Release -> Install.
-7. The app should quit, replace `/Applications/Jarvis Menu Bar.app`, and reopen.
-8. Reopen the menu and confirm the App Release row shows current `0.1.3`.
+7. The app should quit, replace `/Applications/Jarvis.app`, and reopen.
+8. Reopen the menu and confirm the App Release row shows the new current version.
 
 If installation fails, the detached helper writes a temporary `install.log` under
-`/tmp/JarvisMenuBarUpdate-*` and shows a macOS notification with the log path.
+`/tmp/JarvisUpdate-*` and shows a macOS notification with the log path.
+
+## Homebrew Direction
+
+The intended Homebrew shape is a private tap that can hold multiple Infinite
+Stack tools:
+
+```bash
+brew tap roughcoder/infinite-stack git@github.com:roughcoder/homebrew-infinite-stack.git
+brew install --cask jarvis
+brew upgrade --cask jarvis
+```
+
+Once the cask exists, Homebrew should own app updates on machines installed with
+Homebrew. The in-app updater can remain for direct installs, but Brew-managed
+installs should show update guidance instead of replacing the `.app` bundle
+behind Brew's back.
 
 ## Test
 

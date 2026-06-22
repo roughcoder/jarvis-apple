@@ -37,6 +37,7 @@ fi
 VERSION="${VERSION#v}"
 TAG="v$VERSION"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ASSET_NAME="Jarvis-macos.zip"
 cd "$ROOT_DIR"
 
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -81,18 +82,18 @@ git push origin "$TAG"
 
 if gh release view "$TAG" --repo "$REPOSITORY" >/dev/null 2>&1; then
   gh release upload "$TAG" \
-    "$ROOT_DIR/dist/JarvisMenuBar-macos.zip" \
-    "$ROOT_DIR/dist/JarvisMenuBar-macos.zip.sha256" \
+    "$ROOT_DIR/dist/$ASSET_NAME" \
+    "$ROOT_DIR/dist/$ASSET_NAME.sha256" \
     "$ROOT_DIR/dist/install_latest.sh" \
     --repo "$REPOSITORY" \
     --clobber
 else
   gh release create "$TAG" \
-    "$ROOT_DIR/dist/JarvisMenuBar-macos.zip" \
-    "$ROOT_DIR/dist/JarvisMenuBar-macos.zip.sha256" \
+    "$ROOT_DIR/dist/$ASSET_NAME" \
+    "$ROOT_DIR/dist/$ASSET_NAME.sha256" \
     "$ROOT_DIR/dist/install_latest.sh" \
     --repo "$REPOSITORY" \
-    --title "Jarvis Menu Bar $TAG" \
+    --title "Jarvis $TAG" \
     --notes-file "$ROOT_DIR/dist/release-notes.md" \
     $DRAFT_FLAG
 fi

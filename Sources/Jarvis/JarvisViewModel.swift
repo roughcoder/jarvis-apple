@@ -236,7 +236,7 @@ final class JarvisViewModel: ObservableObject {
             )
             let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)
                 .first ?? FileManager.default.homeDirectoryForCurrentUser
-            let targetName = release.assetName ?? "JarvisMenuBar-\(release.tagName)-macos.zip"
+            let targetName = release.assetName ?? "\(AppIdentity.executableName)-\(release.tagName)-macos.zip"
             let targetURL = downloads.appendingPathComponent(targetName)
 
             if FileManager.default.fileExists(atPath: targetURL.path) {
@@ -294,7 +294,7 @@ final class JarvisViewModel: ObservableObject {
             )
             try AppReleaseInstaller().installDownloadedRelease(archiveURL: temporaryURL)
             appReleaseStatus = "Installing \(release.tagName)"
-            lastCommandOutput += "\n\nInstaller launched. Jarvis Menu Bar will quit, replace the app bundle, and reopen."
+            lastCommandOutput += "\n\nInstaller launched. \(AppIdentity.displayName) will quit, replace the app bundle, and reopen."
             NSApp.terminate(nil)
         } catch {
             isInstallingAppRelease = false

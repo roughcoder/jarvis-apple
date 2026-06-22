@@ -31,7 +31,7 @@ struct MenuContentView: View {
                 .padding(.top, 4)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Jarvis Menu Bar")
+                Text(AppIdentity.displayName)
                     .font(.headline)
                 Text("\(viewModel.fleetStatus.deviceID) · \(viewModel.fleetStatus.git.branch) @ \(viewModel.fleetStatus.git.revision)")
                     .font(.caption)
@@ -365,7 +365,7 @@ struct SettingsView: View {
                     .textFieldStyle(.roundedBorder)
                 SecureField("GitHub token for private releases", text: $settings.appReleaseGitHubToken)
                     .textFieldStyle(.roundedBorder)
-                Text("Use owner/repo, for example roughcoder/jarvis-swift-toolbar. Private repositories need a token with repo release read access.")
+                Text("Use owner/repo, for example \(AppIdentity.releaseRepository). Private repositories need a token with repo release read access.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

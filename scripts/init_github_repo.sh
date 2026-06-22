@@ -40,12 +40,12 @@ fi
 git add Package.swift README.md Sources Tests scripts .gitignore
 
 if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
-  git commit -m "Establish Jarvis menu bar release loop
+  git commit -m "Establish Jarvis macOS release loop
 
 Constraint: local macOS distribution uses SwiftPM plus GitHub release assets
 Confidence: high
 Scope-risk: moderate
-Directive: keep Jarvis service logic out of the menu bar app
+Directive: keep Jarvis service logic out of the macOS app
 Tested: swift test; swift build -c release
 Not-tested: GitHub release publication before remote creation"
 fi

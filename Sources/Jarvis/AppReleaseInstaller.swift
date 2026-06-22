@@ -8,7 +8,7 @@ enum AppReleaseInstallerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notRunningFromAppBundle:
-            return "Self-update requires running from the packaged Jarvis Menu Bar.app bundle."
+            return "Self-update requires running from the packaged \(AppIdentity.displayName).app bundle."
         case .helperLaunchFailed(let message):
             return "Could not start the update installer: \(message)"
         }
@@ -16,7 +16,7 @@ enum AppReleaseInstallerError: LocalizedError {
 }
 
 struct AppReleaseInstaller {
-    static let expectedAppName = "Jarvis Menu Bar.app"
+    static let expectedAppName = "\(AppIdentity.displayName).app"
 
     func installDownloadedRelease(
         archiveURL: URL,
@@ -29,10 +29,10 @@ struct AppReleaseInstaller {
 
         let fileManager = FileManager.default
         let workDirectory = fileManager.temporaryDirectory
-            .appendingPathComponent("JarvisMenuBarUpdate-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("\(AppIdentity.executableName)Update-\(UUID().uuidString)", isDirectory: true)
         try fileManager.createDirectory(at: workDirectory, withIntermediateDirectories: true)
 
-        let stagedArchiveURL = workDirectory.appendingPathComponent("JarvisMenuBar-macos.zip")
+        let stagedArchiveURL = workDirectory.appendingPathComponent(AppIdentity.releaseAssetName)
         if fileManager.fileExists(atPath: stagedArchiveURL.path) {
             try fileManager.removeItem(at: stagedArchiveURL)
         }
@@ -88,13 +88,13 @@ struct AppReleaseInstaller {
     TARGET_APP="$INSTALL_DIR/$APP_NAME"
     UNPACK_DIR="$WORK_DIR/unpack"
     LOG_PATH="$WORK_DIR/install.log"
-    TEMP_TARGET="$INSTALL_DIR/.JarvisMenuBar.updating.$$.app"
+    TEMP_TARGET="$INSTALL_DIR/.Jarvis.updating.$$.app"
 
     mkdir -p "$WORK_DIR"
     exec >> "$LOG_PATH" 2>&1
 
     notify_failure() {
-      /usr/bin/osascript -e "display notification \\"Update failed. See $LOG_PATH\\" with title \\"Jarvis Menu Bar\\"" >/dev/null 2>&1 || true
+      /usr/bin/osascript -e "display notification \\"Update failed. See $LOG_PATH\\" with title \\"Jarvis\\"" >/dev/null 2>&1 || true
     }
     trap notify_failure ERR
 
@@ -108,7 +108,7 @@ struct AppReleaseInstaller {
 
     if /bin/kill -0 "$APP_PID" >/dev/null 2>&1; then
       echo "App process still running; asking it to quit"
-      /usr/bin/osascript -e 'tell application "Jarvis Menu Bar" to quit' >/dev/null 2>&1 || true
+      /usr/bin/osascript -e 'tell application "Jarvis" to quit' >/dev/null 2>&1 || true
       /bin/sleep 1
     fi
 

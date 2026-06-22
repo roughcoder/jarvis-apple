@@ -1,31 +1,31 @@
 import XCTest
-@testable import JarvisMenuBar
+@testable import Jarvis
 
 final class AppReleaseInstallerTests: XCTestCase {
     func testFindsContainingAppBundle() {
-        let bundle = URL(fileURLWithPath: "/Applications/Jarvis Menu Bar.app/Contents/MacOS/JarvisMenuBar")
+        let bundle = URL(fileURLWithPath: "/Applications/Jarvis.app/Contents/MacOS/Jarvis")
 
         XCTAssertEqual(
             AppReleaseInstaller.appBundleURL(containing: bundle)?.path,
-            "/Applications/Jarvis Menu Bar.app"
+            "/Applications/Jarvis.app"
         )
     }
 
     func testReturnsNilWhenNoAppBundleContainsPath() {
-        let executable = URL(fileURLWithPath: "/tmp/JarvisMenuBar")
+        let executable = URL(fileURLWithPath: "/tmp/Jarvis")
 
         XCTAssertNil(AppReleaseInstaller.appBundleURL(containing: executable))
     }
 
     func testHelperScriptReopensInstalledApp() {
         XCTAssertTrue(AppReleaseInstaller.helperScript.contains(#"/usr/bin/open "$TARGET_APP""#))
-        XCTAssertTrue(AppReleaseInstaller.helperScript.contains("Jarvis Menu Bar"))
+        XCTAssertTrue(AppReleaseInstaller.helperScript.contains("Jarvis"))
         XCTAssertFalse(AppReleaseInstaller.helperScript.contains("GITHUB_TOKEN"))
     }
 
     func testHelperScriptIsValidBashSyntax() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("JarvisMenuBarTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("JarvisTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer {
             try? FileManager.default.removeItem(at: directory)

@@ -26,10 +26,11 @@ fi
 VERSION="${VERSION#v}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
-APP_NAME="Jarvis Menu Bar"
-EXECUTABLE_NAME="JarvisMenuBar"
+APP_NAME="Jarvis"
+EXECUTABLE_NAME="Jarvis"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
-ZIP_PATH="$DIST_DIR/JarvisMenuBar-macos.zip"
+ASSET_NAME="Jarvis-macos.zip"
+ZIP_PATH="$DIST_DIR/$ASSET_NAME"
 BUILD_NUMBER="${BUILD_NUMBER:-$(date +%Y%m%d%H%M%S)}"
 
 cd "$ROOT_DIR"
@@ -55,7 +56,7 @@ cat > "$APP_DIR/Contents/Info.plist" <<PLIST
   <key>CFBundleExecutable</key>
   <string>$EXECUTABLE_NAME</string>
   <key>CFBundleIdentifier</key>
-  <string>com.jarvis.menubar</string>
+  <string>dev.infinitestack.jarvis</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
@@ -87,17 +88,17 @@ fi
 (
   cd "$DIST_DIR"
   ditto -c -k --keepParent "$APP_NAME.app" "$ZIP_PATH"
-  shasum -a 256 "$(basename "$ZIP_PATH")" > "$(basename "$ZIP_PATH").sha256"
+  shasum -a 256 "$ASSET_NAME" > "$ASSET_NAME.sha256"
 )
 
 cat > "$DIST_DIR/release-notes.md" <<NOTES
-# Jarvis Menu Bar v$VERSION
+# Jarvis v$VERSION
 
-Local macOS menu bar app for observing Jarvis roles and checking app releases.
+Local macOS app for observing Jarvis roles and checking app releases.
 
 ## Install
 
-Download \`JarvisMenuBar-macos.zip\`, unzip it, and move \`$APP_NAME.app\` to \`/Applications\`.
+Download \`$ASSET_NAME\`, unzip it, and move \`$APP_NAME.app\` to \`/Applications\`.
 
 For scripted install, download the \`install_latest.sh\` release asset and run it:
 

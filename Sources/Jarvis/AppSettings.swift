@@ -66,7 +66,7 @@ final class AppSettings: ObservableObject {
         pollInterval = storedPollInterval > 0 ? storedPollInterval : 5
         dockerChecksEnabled = defaults.object(forKey: Keys.dockerChecksEnabled) as? Bool ?? true
         appReleaseRepository = defaults.string(forKey: Keys.appReleaseRepository)
-            ?? "roughcoder/jarvis-swift-toolbar"
+            ?? AppIdentity.releaseRepository
         appReleaseGitHubToken = keychain.read(service: Keys.keychainService, account: Keys.githubTokenAccount) ?? ""
     }
 
@@ -117,7 +117,7 @@ final class AppSettings: ObservableObject {
         static let pollInterval = "pollInterval"
         static let dockerChecksEnabled = "dockerChecksEnabled"
         static let appReleaseRepository = "appReleaseRepository"
-        static let keychainService = "com.jarvis.menubar"
+        static let keychainService = AppIdentity.keychainService
         static let githubTokenAccount = "github-release-token"
     }
 
