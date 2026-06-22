@@ -47,7 +47,8 @@ Open Settings from the menu bar item and configure:
 - Status JSON and command output are redacted before display or clipboard copy.
 - App release checks read GitHub Releases and can install newer packaged app releases.
 - If `jarvis-app` is installed with Homebrew, app release checks use Homebrew
-  instead and show Brew upgrade guidance instead of replacing the app bundle.
+  instead; the Upgrade button launches a detached Homebrew helper, quits Jarvis,
+  upgrades the cask, and reopens the app.
 - The menu bar item uses an SF Symbols icon. The current symbol is `robot`,
   configured in `AppIdentity.menuBarSymbolName`.
 

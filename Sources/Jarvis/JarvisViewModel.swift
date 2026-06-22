@@ -49,11 +49,11 @@ final class JarvisViewModel: ObservableObject {
     }
 
     var appReleaseActionTitle: String {
-        homebrewCaskStatus == nil ? "Install" : "Brew"
+        homebrewCaskStatus == nil ? "Install" : "Upgrade"
     }
 
     var appReleaseActionSymbol: String {
-        homebrewCaskStatus == nil ? "arrow.down.app" : "terminal"
+        homebrewCaskStatus == nil ? "arrow.down.app" : "arrow.triangle.2.circlepath.circle"
     }
 
     func startPolling() async {
@@ -289,7 +289,7 @@ final class JarvisViewModel: ObservableObject {
         }
 
         if let homebrewCaskStatus {
-            showHomebrewUpdateInstructions(for: homebrewCaskStatus)
+            installHomebrewUpdate(for: homebrewCaskStatus)
             return
         }
 
@@ -353,8 +353,14 @@ final class JarvisViewModel: ObservableObject {
         }
     }
 
-    private func showHomebrewUpdateInstructions(for status: HomebrewCaskStatus) {
-        appReleaseStatus = "Update with Homebrew"
+    private func installHomebrewUpdate(for status: HomebrewCaskStatus) {
+        guard status.isOutdated else {
+            appReleaseStatus = "Homebrew up to date (\(status.installedVersion))"
+            return
+        }
+
+        isInstallingAppRelease = true
+        activeOperation = "Updating with Homebrew"
         lastError = nil
         lastCommandOutput = """
         Jarvis is installed with Homebrew as \(status.token).
@@ -369,6 +375,19 @@ final class JarvisViewModel: ObservableObject {
         brew update
         brew upgrade --cask \(status.token)
         """
+
+        do {
+            try HomebrewAppUpdater().upgradeInstalledCask(status: status)
+            appReleaseStatus = "Updating with Homebrew"
+            lastCommandOutput += "\n\nHomebrew updater launched. \(AppIdentity.displayName) will quit, upgrade the cask, and reopen."
+            NSApp.terminate(nil)
+        } catch {
+            isInstallingAppRelease = false
+            activeOperation = nil
+            lastError = readableError(error)
+            appReleaseStatus = readableError(error)
+            lastCommandOutput += "\n\nERROR: \(readableError(error))"
+        }
     }
 
     private func perform(_ title: String, operation: () async throws -> CommandResult) async {
