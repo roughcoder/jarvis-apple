@@ -65,6 +65,19 @@ final class JarvisClientTests: XCTestCase {
         )
     }
 
+    func testBrainStatusArgumentsIncludeHostAndPortOverrides() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+
+        XCTAssertEqual(
+            client.brainStatusArguments(host: " imac.private ", port: " 8701 "),
+            ["status", "--json", "--brain-host", "imac.private", "--brain-port", "8701"]
+        )
+    }
+
     private func configuration(
         jarvisRepoPath: String,
         jarvisPath: String,

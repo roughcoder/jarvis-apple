@@ -5,7 +5,6 @@ struct MenuContentView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var viewModel: JarvisViewModel
     @Environment(\.openWindow) private var openWindow
-    @State private var setupProfile: SetupProfile = .custom
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -372,6 +371,14 @@ struct SetupGuideView: View {
             }
 
             HStack(spacing: 10) {
+                Button {
+                    openWindow(id: "command-progress")
+                    Task { await viewModel.checkPairingBrain() }
+                } label: {
+                    Label("Check Brain", systemImage: "network")
+                }
+                .disabled(viewModel.isBusy || settings.pairingBrainHost.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
                 Button {
                     openWindow(id: "command-progress")
                     Task { await viewModel.issuePairingToken() }

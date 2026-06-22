@@ -200,6 +200,23 @@ struct JarvisClient {
         return arguments
     }
 
+    func checkBrain(host: String, port: String = "8700") async throws -> CommandResult {
+        try await runJarvis(arguments: brainStatusArguments(host: host, port: port), timeout: 12)
+    }
+
+    func brainStatusArguments(host: String, port: String = "8700") -> [String] {
+        var arguments = ["status", "--json"]
+        let trimmedHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedHost.isEmpty {
+            arguments.append(contentsOf: ["--brain-host", trimmedHost])
+        }
+        let trimmedPort = port.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedPort.isEmpty {
+            arguments.append(contentsOf: ["--brain-port", trimmedPort])
+        }
+        return arguments
+    }
+
     func runUV(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {
         try await runner.run(
             executable: configuration.uvPath,

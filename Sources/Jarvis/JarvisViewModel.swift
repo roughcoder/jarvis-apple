@@ -282,6 +282,35 @@ final class JarvisViewModel: ObservableObject {
         }
     }
 
+    func checkPairingBrain() async {
+        let brainHost = settings.pairingBrainHost.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !brainHost.isEmpty else {
+            lastError = "Enter the brain host before checking reachability."
+            return
+        }
+
+        activeOperation = "Checking brain reachability"
+        lastError = nil
+
+        do {
+            let result = try await JarvisClient(configuration: settings.configuration)
+                .checkBrain(host: brainHost)
+            append(result, label: "jarvis status")
+            if result.succeeded {
+                lastCommandOutput += "\n\nBrain is reachable and paired for this device."
+            } else if result.stdout.contains(#""reachable": true"#) {
+                lastCommandOutput += "\n\nBrain is reachable. Pairing is not accepted for this device yet."
+            } else {
+                lastError = "Brain is not reachable at \(brainHost)."
+            }
+            activeOperation = nil
+        } catch {
+            activeOperation = nil
+            lastError = readableError(error)
+            append("ERROR: \(readableError(error))")
+        }
+    }
+
     func copyLatestPairingEntry() {
         guard let latestPairingIssue else {
             return
