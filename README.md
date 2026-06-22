@@ -2,8 +2,9 @@
 
 Native macOS app for observing and safely controlling local Jarvis roles.
 
-The app intentionally shells out to the installed Jarvis checkout instead of embedding
-Jarvis brain, intercom, worker, memory, gateway, or capability logic.
+The app intentionally shells out to the installed `jarvis` runtime instead of
+embedding Jarvis brain, intercom, worker, memory, gateway, or capability logic.
+During development it can still run through a local checkout with `uv`.
 
 The current first surface is a menu bar operator panel. The product name is
 broader on purpose: the same `.app` can grow into a full desktop chat and
@@ -29,9 +30,11 @@ swift run Jarvis
 Open Settings from the menu bar item and configure:
 
 - Jarvis repo path
+- `jarvis` command path
 - `uv` binary path
 - logs path
 - installed roles on this Mac
+- brain host used when issuing Raspberry Pi installer commands
 - poll interval
 - Docker checks
 - app release repository, defaulting to `roughcoder/jarvis-apple`
@@ -39,8 +42,10 @@ Open Settings from the menu bar item and configure:
 
 ## Behavior
 
-- Fast polling runs `uv run jarvis fleet-status --json --no-docker`.
-- Full refreshes run `uv run jarvis fleet-status --json`.
+- Fast polling runs `jarvis fleet-status --json --no-docker`.
+- Full refreshes run `jarvis fleet-status --json`.
+- If the configured repo path points at a development checkout and `uv` is
+  executable, the app runs `uv run jarvis ...` from that checkout.
 - Local role controls use `launchctl` against `com.jarvis.brain`,
   `com.jarvis.intercom`, and `com.jarvis.worker`.
 - Update is explicit and blocks when the Jarvis git working tree is dirty.
@@ -50,8 +55,8 @@ Open Settings from the menu bar item and configure:
   instead; the Upgrade button launches a detached Homebrew helper, quits Jarvis,
   upgrades the cask, and reopens the app.
 - The Setup window installs selected local Jarvis services through the runtime
-  CLI, issues per-device pairing entries, and keeps first-run setup out of raw
-  terminal commands.
+  CLI, issues per-device pairing entries, and can copy a Raspberry Pi installer
+  command when a brain host is configured.
 - Fresh installs open the Setup window automatically the first time the app
   launches, before any roles are configured.
 - The menu bar item uses an SF Symbols icon. The current symbol is `brain.head.profile`,
@@ -83,7 +88,7 @@ This creates:
 
 Preferred release path: run the `Release` workflow in GitHub Actions with:
 
-- `version`: the release version, for example `0.2.6`
+- `version`: the release version, for example `0.2.7`
 - `draft`: whether the GitHub release should remain draft
 - `skip_homebrew`: whether to skip the tap update
 
