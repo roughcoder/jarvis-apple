@@ -27,11 +27,10 @@ operations UI without becoming a second macOS app.
 swift run Jarvis
 ```
 
-Open Settings from the menu bar item and configure:
+Open Settings from the menu bar item and configure as needed:
 
-- Jarvis repo path
-- `jarvis` command path
-- `uv` binary path
+- `jarvis` command path for packaged installs
+- optional Jarvis repo path and `uv` binary path for development checkouts
 - logs path
 - installed roles on this Mac
 - brain host used when issuing Raspberry Pi installer commands
@@ -160,11 +159,11 @@ JARVIS_INSTALL_DIR="$HOME/Applications" bash /tmp/install_jarvis.sh
 After the app opens:
 
 1. Open the Jarvis menu bar item.
-2. Open Settings.
-3. Set `GitHub repo` to `roughcoder/jarvis-apple`.
-4. Configure the Jarvis repo path, `uv` path, logs path, and installed roles for
-   that Mac.
-5. Close Settings.
+2. Open Setup.
+3. Choose this Mac's setup profile: Brain Mac, Laptop, Worker, Room Pi, or Custom.
+4. Set the brain host when pairing other devices.
+5. Use Install Services to sync role dependencies and install/start launchd
+   services for the selected roles.
 6. Use App Release -> Check. On the current release, it should report up to date until a
    newer release exists.
 
@@ -189,7 +188,14 @@ If installation fails, the detached helper writes a temporary `install.log` unde
 
 ## Homebrew Direction
 
-The Homebrew tap can hold multiple Infinite Stack tools:
+The Homebrew tap can hold multiple Infinite Stack tools. The normal public Mac
+path is the runtime bootstrap:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/roughcoder/jarvis/main/scripts/install_mac.sh | bash
+```
+
+Manual Homebrew equivalent:
 
 ```bash
 brew tap roughcoder/infinite-stack
