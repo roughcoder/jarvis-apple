@@ -4,7 +4,6 @@ import SwiftUI
 struct MenuContentView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var viewModel: JarvisViewModel
-    @Environment(\.openSettings) private var openSettings
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -193,8 +192,7 @@ struct MenuContentView: View {
                 }
 
                 Button {
-                    NSApplication.shared.activate()
-                    openSettings()
+                    AppWindowPresenter.openSettings()
                 } label: {
                     Label("Settings", systemImage: "gearshape")
                 }
@@ -214,7 +212,6 @@ struct MenuContentView: View {
 struct SetupGuideView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var viewModel: JarvisViewModel
-    @Environment(\.openSettings) private var openSettings
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -251,8 +248,7 @@ struct SetupGuideView: View {
 
             HStack(spacing: 10) {
                 Button {
-                    NSApplication.shared.activate()
-                    openSettings()
+                    AppWindowPresenter.openSettings()
                 } label: {
                     Label("Settings", systemImage: "gearshape")
                 }

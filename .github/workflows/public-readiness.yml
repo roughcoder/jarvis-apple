@@ -28,8 +28,8 @@ jobs:
         run: |
           set -euo pipefail
           hits="$(
-            git ls-files \
-              | xargs grep -IlE '(ghp_|github_pat_|sk-[A-Za-z0-9]{20,}|BEGIN (RSA|OPENSSH|PRIVATE) KEY)' \
+            git grep -IlE '(ghp_|github_pat_|sk-[A-Za-z0-9]{20,}|BEGIN (RSA|OPENSSH|PRIVATE) KEY)' \
+              -- ':!.github/workflows/public-readiness.yml' \
               || true
           )"
           if [[ -n "$hits" ]]; then
@@ -37,4 +37,3 @@ jobs:
             echo "$hits"
             exit 1
           fi
-
