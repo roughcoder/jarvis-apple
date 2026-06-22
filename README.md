@@ -79,7 +79,19 @@ This creates:
 - `dist/Jarvis-macos.zip`
 - `dist/Jarvis-macos.zip.sha256`
 
-Create or update a GitHub Release and Homebrew cask:
+Preferred release path: run the `Release` workflow in GitHub Actions with:
+
+- `version`: the release version, for example `0.2.6`
+- `draft`: whether the GitHub release should remain draft
+- `skip_homebrew`: whether to skip the tap update
+
+The workflow builds `Jarvis-macos.zip`, publishes the GitHub Release, uploads
+the release artifacts to the workflow run, and updates
+`roughcoder/homebrew-infinite-stack` when `skip_homebrew` is false. The tap
+update requires a repository secret named `HOMEBREW_TAP_TOKEN` with write access
+to the tap.
+
+Local fallback for creating or updating a GitHub Release and Homebrew cask:
 
 ```bash
 scripts/release_github.sh 0.1.0
