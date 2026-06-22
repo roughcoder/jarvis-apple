@@ -52,7 +52,13 @@ final class JarvisClientTests: XCTestCase {
 
         XCTAssertEqual(
             client.pairingArguments(deviceID: "room-pi", identity: "neil", brainHost: " imac.private "),
-            ["pair", "room-pi", "--json", "--identity", "neil", "--pi-installer", "--brain-host", "imac.private"]
+            [
+                "pair", "room-pi", "--json",
+                "--identity", "neil",
+                "--mac-config",
+                "--pi-installer",
+                "--brain-host", "imac.private"
+            ]
         )
     }
 

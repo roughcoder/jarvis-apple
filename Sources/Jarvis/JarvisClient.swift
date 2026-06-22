@@ -199,7 +199,11 @@ struct JarvisClient {
         }
         let trimmedBrainHost = brainHost.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedBrainHost.isEmpty {
-            arguments.append(contentsOf: ["--pi-installer", "--brain-host", trimmedBrainHost])
+            arguments.append(contentsOf: [
+                "--mac-config",
+                "--pi-installer",
+                "--brain-host", trimmedBrainHost
+            ])
         }
         return arguments
     }

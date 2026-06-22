@@ -57,8 +57,8 @@ Open Settings from the menu bar item and configure:
 - The Setup window installs selected local Jarvis services through the runtime
   CLI, checks brain reachability for the configured private-network host,
   checks worker GUI readiness with `jarvis worker --doctor`, issues per-device
-  pairing entries, and can copy a Raspberry Pi installer command when a brain
-  host is configured.
+  pairing entries, and can copy Mac pairing config or Raspberry Pi installer
+  commands when a brain host is configured.
 - Packaged installs pass `--workdir ~/.jarvis` during service installation so
   launchd services load local configuration from `~/.jarvis/.env`.
 - Fresh installs open the Setup window automatically the first time the app

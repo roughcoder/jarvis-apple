@@ -403,6 +403,13 @@ struct SetupGuideView: View {
                 .disabled(viewModel.latestPairingIssue == nil)
 
                 Button {
+                    viewModel.copyLatestMacConfigCommand()
+                } label: {
+                    Label("Copy Mac Config", systemImage: "laptopcomputer")
+                }
+                .disabled(viewModel.latestPairingIssue?.macConfigCommand == nil)
+
+                Button {
                     viewModel.copyLatestPiInstallerCommand()
                 } label: {
                     Label("Copy Pi Command", systemImage: "terminal")
@@ -414,6 +421,9 @@ struct SetupGuideView: View {
             if let latestPairingIssue = viewModel.latestPairingIssue {
                 VStack(alignment: .leading, spacing: 8) {
                     PairingOutputBlock(text: latestPairingIssue.brainDevicesEntry)
+                    if let macConfigCommand = latestPairingIssue.macConfigCommand {
+                        PairingOutputBlock(text: macConfigCommand)
+                    }
                     if let piInstallerCommand = latestPairingIssue.piInstallerCommand {
                         PairingOutputBlock(text: piInstallerCommand)
                     }

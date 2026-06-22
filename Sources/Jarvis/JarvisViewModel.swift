@@ -266,6 +266,13 @@ final class JarvisViewModel: ObservableObject {
             BRAIN_DEVICES entry:
             \(issue.brainDevicesEntry)
             """
+            if let macConfigCommand = issue.macConfigCommand {
+                output += """
+
+                Mac pairing config command:
+                \(macConfigCommand)
+                """
+            }
             if let piInstallerCommand = issue.piInstallerCommand {
                 output += """
 
@@ -338,6 +345,15 @@ final class JarvisViewModel: ObservableObject {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(latestPairingIssue.brainDevicesEntry, forType: .string)
         lastCommandOutput = "Copied BRAIN_DEVICES entry to the clipboard."
+    }
+
+    func copyLatestMacConfigCommand() {
+        guard let macConfigCommand = latestPairingIssue?.macConfigCommand else {
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(macConfigCommand, forType: .string)
+        lastCommandOutput = "Copied Mac pairing config command to the clipboard."
     }
 
     func copyLatestPiInstallerCommand() {

@@ -14,6 +14,7 @@ final class PairingIssueTests: XCTestCase {
 
         XCTAssertEqual(issue.token, "abc123")
         XCTAssertTrue(issue.brainDevicesEntry.contains("kitchen-pi"))
+        XCTAssertNil(issue.macConfigCommand)
         XCTAssertNil(issue.piInstallerCommand)
     }
 
@@ -29,5 +30,19 @@ final class PairingIssueTests: XCTestCase {
         let issue = try PairingIssueParser.parse(data: Data(json.utf8))
 
         XCTAssertEqual(issue.piInstallerCommand, "curl -fsSL https://example.invalid/install.sh")
+    }
+
+    func testParsesOptionalMacConfigCommand() throws {
+        let json = """
+        {
+          "token": "abc123",
+          "brain_devices_entry": "{\\"token\\":\\"abc123\\",\\"device_id\\":\\"neil-laptop\\"}",
+          "mac_config_command": "mkdir -p ~/.jarvis"
+        }
+        """
+
+        let issue = try PairingIssueParser.parse(data: Data(json.utf8))
+
+        XCTAssertEqual(issue.macConfigCommand, "mkdir -p ~/.jarvis")
     }
 }
