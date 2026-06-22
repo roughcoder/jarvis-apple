@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="${JARVIS_MENU_BAR_REPO:-__REPOSITORY__}"
+PLACEHOLDER_REPO="__""REPOSITORY__"
+DEFAULT_REPO="__REPOSITORY__"
+REPO="${JARVIS_MENU_BAR_REPO:-$DEFAULT_REPO}"
 INSTALL_DIR="${JARVIS_MENU_BAR_INSTALL_DIR:-/Applications}"
 APP_NAME="Jarvis Menu Bar.app"
 ASSET_NAME="JarvisMenuBar-macos.zip"
 
-if [[ "$REPO" == "__REPOSITORY__" || -z "$REPO" ]]; then
+if [[ "$REPO" == "$PLACEHOLDER_REPO" || -z "$REPO" ]]; then
   echo "Set JARVIS_MENU_BAR_REPO=owner/repo before running this installer." >&2
   exit 2
 fi
