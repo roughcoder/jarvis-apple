@@ -83,6 +83,58 @@ Release section. It downloads the latest release zip, starts a detached installe
 helper, quits the app, replaces the current `.app` bundle, and reopens the new
 version. Self-update is disabled when running through `swift run`.
 
+## Install And Self-Update Test
+
+Use these steps on a second Mac.
+
+Prerequisites:
+
+- GitHub CLI installed: `brew install gh`
+- Authenticated GitHub CLI session with access to `roughcoder/jarvis-swift-toolbar`:
+  `gh auth login`
+- A GitHub token with private repository release read access, for the app's
+  Settings window. Fine-grained tokens should allow contents/repository metadata
+  read access for this repository.
+
+Initial install:
+
+```bash
+tmpdir=$(mktemp -d)
+gh release download v0.1.2 --repo roughcoder/jarvis-swift-toolbar --pattern install_latest.sh --dir "$tmpdir"
+bash "$tmpdir/install_latest.sh"
+```
+
+After the app opens:
+
+1. Open the Jarvis menu bar item.
+2. Open Settings.
+3. Set `GitHub repo` to `roughcoder/jarvis-swift-toolbar`.
+4. Paste the GitHub token into `GitHub token for private releases`.
+5. Configure the Jarvis repo path, `uv` path, logs path, and installed roles for
+   that Mac.
+6. Close Settings.
+7. Use App Release -> Check. On `v0.1.2`, it should report up to date until a
+   newer release exists.
+
+Self-update test:
+
+1. On the development Mac, commit any app change.
+2. Publish a newer release:
+
+   ```bash
+   scripts/release_github.sh 0.1.3
+   ```
+
+3. On the second Mac, open the Jarvis menu bar item.
+4. Use App Release -> Check.
+5. Confirm it reports `v0.1.3 available`.
+6. Use App Release -> Install.
+7. The app should quit, replace `/Applications/Jarvis Menu Bar.app`, and reopen.
+8. Reopen the menu and confirm the App Release row shows current `0.1.3`.
+
+If installation fails, the detached helper writes a temporary `install.log` under
+`/tmp/JarvisMenuBarUpdate-*` and shows a macOS notification with the log path.
+
 ## Test
 
 ```bash
