@@ -147,16 +147,25 @@ struct JarvisClient {
     }
 
     func uvSyncForInstalledRoles() async throws -> CommandResult {
-        let extras = Self.syncExtras(for: configuration.installedRoles)
-        guard !extras.isEmpty else {
+        let roles = Self.orderedInstalledRoles(for: configuration.installedRoles)
+        guard !roles.isEmpty else {
             throw JarvisClientError.noInstalledRoles
         }
 
+        if runtimeMode() == .installed {
+            return try await runJarvis(arguments: serviceSyncArguments(roles: roles), timeout: 600)
+        }
+
+        let extras = Self.syncExtras(for: configuration.installedRoles)
         let arguments = extras.reduce(into: ["sync"]) { partial, extra in
             partial.append("--extra")
             partial.append(extra)
         }
         return try await runUV(arguments: arguments, timeout: 300)
+    }
+
+    func serviceSyncArguments(roles: [JarvisRole]) -> [String] {
+        ["service", "sync"] + roles.map(\.rawValue)
     }
 
     func installService(role: JarvisRole) async throws -> CommandResult {
@@ -301,11 +310,10 @@ struct JarvisClient {
     }
 
     static func syncExtras(for roles: Set<JarvisRole>) -> [String] {
-        let orderedRoles: [JarvisRole] = [.brain, .worker, .intercom]
         var seen = Set<String>()
         var extras = [String]()
 
-        for role in orderedRoles where roles.contains(role) {
+        for role in orderedInstalledRoles(for: roles) {
             for extra in extrasForRole(role) where !seen.contains(extra) {
                 seen.insert(extra)
                 extras.append(extra)
@@ -313,6 +321,10 @@ struct JarvisClient {
         }
 
         return extras
+    }
+
+    static func orderedInstalledRoles(for roles: Set<JarvisRole>) -> [JarvisRole] {
+        [.brain, .worker, .intercom].filter { roles.contains($0) }
     }
 
     private static func extrasForRole(_ role: JarvisRole) -> [String] {

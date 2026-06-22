@@ -98,17 +98,32 @@ final class JarvisClientTests: XCTestCase {
         XCTAssertEqual(client.workerDoctorArguments(), ["worker", "--doctor"])
     }
 
+    func testInstalledRoleSyncUsesJarvisServiceSync() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv",
+            installedRoles: [.intercom, .brain]
+        ))
+
+        XCTAssertEqual(
+            client.serviceSyncArguments(roles: JarvisClient.orderedInstalledRoles(for: client.configuration.installedRoles)),
+            ["service", "sync", "brain", "intercom"]
+        )
+    }
+
     private func configuration(
         jarvisRepoPath: String,
         jarvisPath: String,
-        uvPath: String
+        uvPath: String,
+        installedRoles: Set<JarvisRole> = []
     ) -> JarvisConfiguration {
         JarvisConfiguration(
             jarvisRepoPath: jarvisRepoPath,
             jarvisPath: jarvisPath,
             uvPath: uvPath,
             logsPath: "~/Library/Logs/Jarvis",
-            installedRoles: [],
+            installedRoles: installedRoles,
             pollInterval: 5,
             dockerChecksEnabled: true,
             appReleaseRepository: AppIdentity.releaseRepository,
