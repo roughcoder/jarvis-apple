@@ -15,8 +15,7 @@ operations UI without becoming a second macOS app.
 - Swift package and executable product: `Jarvis`
 - Bundle identifier: `dev.infinitestack.jarvis`
 - Release asset: `Jarvis-macos.zip`
-- Current release repository: `roughcoder/jarvis-swift-toolbar`
-- Future preferred repository name: `roughcoder/jarvis-macos` or `roughcoder/jarvis`
+- Release repository: `roughcoder/jarvis-apple`
 - Future Homebrew tap: `roughcoder/homebrew-infinite-stack`
 - Future Homebrew cask: `jarvis`
 
@@ -34,7 +33,7 @@ Open Settings from the menu bar item and configure:
 - installed roles on this Mac
 - poll interval
 - Docker checks
-- app release repository, defaulting to `roughcoder/jarvis-swift-toolbar`
+- app release repository, defaulting to `roughcoder/jarvis-apple`
 - GitHub token for private-release checks, stored in Keychain
 
 ## Behavior
@@ -53,7 +52,7 @@ Initialize the GitHub repository once, if you are starting from a fresh checkout
 
 ```bash
 git init -b main
-git remote add origin git@github.com:roughcoder/jarvis-swift-toolbar.git
+git remote add origin git@github.com:roughcoder/jarvis-apple.git
 git add Package.swift README.md Sources Tests scripts .gitignore
 git commit -m "Establish Jarvis macOS release loop"
 git push -u origin main
@@ -83,14 +82,14 @@ zip, checksum, and `install_latest.sh` installer asset.
 For this private repository, authenticated installs can use `gh`:
 
 ```bash
-gh release download --repo roughcoder/jarvis-swift-toolbar --pattern install_latest.sh --output /tmp/install_jarvis.sh
+gh release download --repo roughcoder/jarvis-apple --pattern install_latest.sh --output /tmp/install_jarvis.sh
 bash /tmp/install_jarvis.sh
 ```
 
 Public repositories can also install the latest release with:
 
 ```bash
-curl -fsSL https://github.com/roughcoder/jarvis-swift-toolbar/releases/latest/download/install_latest.sh | bash
+curl -fsSL https://github.com/roughcoder/jarvis-apple/releases/latest/download/install_latest.sh | bash
 ```
 
 Once installed as `Jarvis.app`, the menu can update itself from the App
@@ -105,7 +104,7 @@ Use these steps on a second Mac.
 Prerequisites:
 
 - GitHub CLI installed: `brew install gh`
-- Authenticated GitHub CLI session with access to `roughcoder/jarvis-swift-toolbar`:
+- Authenticated GitHub CLI session with access to `roughcoder/jarvis-apple`:
   `gh auth login`
 - A GitHub token with private repository release read access, for the app's
   Settings window. Fine-grained tokens should allow contents/repository metadata
@@ -114,7 +113,7 @@ Prerequisites:
 Initial install:
 
 ```bash
-gh release download --repo roughcoder/jarvis-swift-toolbar --pattern install_latest.sh --output /tmp/install_jarvis.sh --clobber
+gh release download --repo roughcoder/jarvis-apple --pattern install_latest.sh --output /tmp/install_jarvis.sh --clobber
 bash /tmp/install_jarvis.sh
 ```
 
@@ -130,7 +129,7 @@ After the app opens:
 
 1. Open the Jarvis menu bar item.
 2. Open Settings.
-3. Set `GitHub repo` to `roughcoder/jarvis-swift-toolbar`.
+3. Set `GitHub repo` to `roughcoder/jarvis-apple`.
 4. Paste the GitHub token into `GitHub token for private releases`.
 5. Configure the Jarvis repo path, `uv` path, logs path, and installed roles for
    that Mac.

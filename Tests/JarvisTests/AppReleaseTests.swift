@@ -10,16 +10,16 @@ final class AppReleaseTests: XCTestCase {
 
     func testNormalizesGitHubRepositoryInputs() throws {
         XCTAssertEqual(
-            try GitHubReleaseClient.normalizedRepository("git@github.com:roughcoder/jarvis-swift-toolbar.git"),
-            "roughcoder/jarvis-swift-toolbar"
+            try GitHubReleaseClient.normalizedRepository("git@github.com:roughcoder/jarvis-apple.git"),
+            "roughcoder/jarvis-apple"
         )
         XCTAssertEqual(
-            try GitHubReleaseClient.normalizedRepository("https://github.com/roughcoder/jarvis-swift-toolbar.git"),
-            "roughcoder/jarvis-swift-toolbar"
+            try GitHubReleaseClient.normalizedRepository("https://github.com/roughcoder/jarvis-apple.git"),
+            "roughcoder/jarvis-apple"
         )
         XCTAssertEqual(
-            try GitHubReleaseClient.normalizedRepository("roughcoder/jarvis-swift-toolbar"),
-            "roughcoder/jarvis-swift-toolbar"
+            try GitHubReleaseClient.normalizedRepository("roughcoder/jarvis-apple"),
+            "roughcoder/jarvis-apple"
         )
     }
 }

@@ -103,7 +103,7 @@ Download \`$ASSET_NAME\`, unzip it, and move \`$APP_NAME.app\` to \`/Application
 For scripted install, download the \`install_latest.sh\` release asset and run it:
 
 \`\`\`bash
-curl -fsSL https://github.com/roughcoder/jarvis-swift-toolbar/releases/latest/download/install_latest.sh | bash
+curl -fsSL https://github.com/roughcoder/jarvis-apple/releases/latest/download/install_latest.sh | bash
 \`\`\`
 NOTES
 
