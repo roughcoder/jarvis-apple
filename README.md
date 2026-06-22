@@ -56,8 +56,9 @@ Open Settings from the menu bar item and configure:
   upgrades the cask, and reopens the app.
 - The Setup window installs selected local Jarvis services through the runtime
   CLI, checks brain reachability for the configured private-network host,
-  issues per-device pairing entries, and can copy a Raspberry Pi installer
-  command when a brain host is configured.
+  checks worker GUI readiness with `jarvis worker --doctor`, issues per-device
+  pairing entries, and can copy a Raspberry Pi installer command when a brain
+  host is configured.
 - Fresh installs open the Setup window automatically the first time the app
   launches, before any roles are configured.
 - The menu bar item uses an SF Symbols icon. The current symbol is `brain.head.profile`,

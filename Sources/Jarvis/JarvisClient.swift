@@ -217,6 +217,14 @@ struct JarvisClient {
         return arguments
     }
 
+    func workerDoctor() async throws -> CommandResult {
+        try await runJarvis(arguments: workerDoctorArguments(), timeout: 15)
+    }
+
+    func workerDoctorArguments() -> [String] {
+        ["worker", "--doctor"]
+    }
+
     func runUV(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {
         try await runner.run(
             executable: configuration.uvPath,

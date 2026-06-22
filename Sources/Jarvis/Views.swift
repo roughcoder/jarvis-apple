@@ -373,6 +373,14 @@ struct SetupGuideView: View {
             HStack(spacing: 10) {
                 Button {
                     openWindow(id: "command-progress")
+                    Task { await viewModel.checkWorkerReadiness() }
+                } label: {
+                    Label("Check Worker", systemImage: "display")
+                }
+                .disabled(viewModel.isBusy || !settings.installedRoles.contains(.worker))
+
+                Button {
+                    openWindow(id: "command-progress")
                     Task { await viewModel.checkPairingBrain() }
                 } label: {
                     Label("Check Brain", systemImage: "network")

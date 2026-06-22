@@ -78,6 +78,16 @@ final class JarvisClientTests: XCTestCase {
         )
     }
 
+    func testWorkerDoctorArguments() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+
+        XCTAssertEqual(client.workerDoctorArguments(), ["worker", "--doctor"])
+    }
+
     private func configuration(
         jarvisRepoPath: String,
         jarvisPath: String,

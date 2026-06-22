@@ -311,6 +311,26 @@ final class JarvisViewModel: ObservableObject {
         }
     }
 
+    func checkWorkerReadiness() async {
+        activeOperation = "Checking worker readiness"
+        lastError = nil
+
+        do {
+            let result = try await JarvisClient(configuration: settings.configuration).workerDoctor()
+            append(result, label: "jarvis worker --doctor")
+            if result.succeeded {
+                lastCommandOutput += "\n\nWorker GUI dependency is installed. Confirm Screen Recording and Accessibility permissions in System Settings."
+            } else {
+                lastError = "Worker GUI dependency is not ready."
+            }
+            activeOperation = nil
+        } catch {
+            activeOperation = nil
+            lastError = readableError(error)
+            append("ERROR: \(readableError(error))")
+        }
+    }
+
     func copyLatestPairingEntry() {
         guard let latestPairingIssue else {
             return
