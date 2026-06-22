@@ -30,7 +30,7 @@ Open Settings from the menu bar item and configure:
   `com.jarvis.intercom`, and `com.jarvis.worker`.
 - Update is explicit and blocks when the Jarvis git working tree is dirty.
 - Status JSON and command output are redacted before display or clipboard copy.
-- App release checks read GitHub Releases and download the packaged app asset.
+- App release checks read GitHub Releases and can install newer packaged app releases.
 
 ## Release Loop
 
@@ -77,6 +77,11 @@ Public repositories can also install the latest release with:
 ```bash
 curl -fsSL https://github.com/roughcoder/jarvis-swift-toolbar/releases/latest/download/install_latest.sh | bash
 ```
+
+Once installed as `Jarvis Menu Bar.app`, the menu can update itself from the App
+Release section. It downloads the latest release zip, starts a detached installer
+helper, quits the app, replaces the current `.app` bundle, and reopens the new
+version. Self-update is disabled when running through `swift run`.
 
 ## Test
 

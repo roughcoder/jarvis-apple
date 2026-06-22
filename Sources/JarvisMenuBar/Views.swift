@@ -92,11 +92,12 @@ struct MenuContentView: View {
                 .disabled(viewModel.isCheckingAppRelease)
 
                 Button {
-                    Task { await viewModel.downloadLatestAppRelease() }
+                    openWindow(id: "command-progress")
+                    Task { await viewModel.installLatestAppRelease() }
                 } label: {
-                    Label("Download", systemImage: "square.and.arrow.down")
+                    Label("Install", systemImage: "arrow.down.app")
                 }
-                .disabled(viewModel.isDownloadingAppRelease || viewModel.latestAppRelease == nil)
+                .disabled(viewModel.isInstallingAppRelease || !viewModel.canInstallAppRelease)
 
                 Button {
                     viewModel.openLatestAppRelease()

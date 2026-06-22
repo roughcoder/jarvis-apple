@@ -12,6 +12,7 @@ final class JarvisViewModel: ObservableObject {
     @Published var appReleaseStatus = "Not checked"
     @Published var isCheckingAppRelease = false
     @Published var isDownloadingAppRelease = false
+    @Published var isInstallingAppRelease = false
 
     private let settings: AppSettings
     private var pollIteration = 0
@@ -31,6 +32,13 @@ final class JarvisViewModel: ObservableObject {
 
     var hasInstallableAppRelease: Bool {
         latestAppRelease?.assetURL != nil || latestAppRelease?.assetAPIURL != nil
+    }
+
+    var canInstallAppRelease: Bool {
+        guard let latestAppRelease, hasInstallableAppRelease else {
+            return false
+        }
+        return AppVersion.isRelease(latestAppRelease.tagName, newerThan: currentAppVersion)
     }
 
     func startPolling() async {
@@ -239,6 +247,59 @@ final class JarvisViewModel: ObservableObject {
             lastCommandOutput = "Downloaded \(targetName) to \(targetURL.path). Use the release install script or unzip the app bundle into /Applications."
             NSWorkspace.shared.activateFileViewerSelecting([targetURL])
         } catch {
+            lastError = readableError(error)
+            appReleaseStatus = readableError(error)
+        }
+    }
+
+    func installLatestAppRelease() async {
+        guard !isInstallingAppRelease else {
+            return
+        }
+
+        guard latestAppRelease != nil else {
+            await checkForAppRelease()
+            guard latestAppRelease != nil else {
+                return
+            }
+            await installLatestAppRelease()
+            return
+        }
+
+        guard canInstallAppRelease else {
+            appReleaseStatus = "Up to date (\(currentAppVersion))"
+            return
+        }
+
+        guard AppReleaseInstaller.currentAppBundleURL() != nil else {
+            lastError = AppReleaseInstallerError.notRunningFromAppBundle.localizedDescription
+            appReleaseStatus = "Run the packaged app to install updates"
+            return
+        }
+
+        guard let release = latestAppRelease else {
+            return
+        }
+
+        isInstallingAppRelease = true
+        isDownloadingAppRelease = true
+        activeOperation = "Installing \(release.tagName)"
+        lastError = nil
+        lastCommandOutput = "Downloading \(release.assetName ?? release.tagName) for installation."
+
+        do {
+            let temporaryURL = try await GitHubReleaseClient().downloadAsset(
+                for: release,
+                token: settings.appReleaseGitHubToken
+            )
+            try AppReleaseInstaller().installDownloadedRelease(archiveURL: temporaryURL)
+            appReleaseStatus = "Installing \(release.tagName)"
+            lastCommandOutput += "\n\nInstaller launched. Jarvis Menu Bar will quit, replace the app bundle, and reopen."
+            NSApp.terminate(nil)
+        } catch {
+            isInstallingAppRelease = false
+            isDownloadingAppRelease = false
+            activeOperation = nil
             lastError = readableError(error)
             appReleaseStatus = readableError(error)
         }
