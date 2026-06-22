@@ -114,9 +114,8 @@ Prerequisites:
 Initial install:
 
 ```bash
-tmpdir=$(mktemp -d)
-gh release download v0.1.2 --repo roughcoder/jarvis-swift-toolbar --pattern install_latest.sh --dir "$tmpdir"
-bash "$tmpdir/install_latest.sh"
+gh release download --repo roughcoder/jarvis-swift-toolbar --pattern install_latest.sh --output /tmp/install_jarvis.sh --clobber
+bash /tmp/install_jarvis.sh
 ```
 
 The installer uses `/Applications` when it is writable. On managed laptops where
@@ -124,7 +123,7 @@ that path needs admin permission, it automatically installs to `~/Applications`.
 Override the target when needed:
 
 ```bash
-JARVIS_INSTALL_DIR="$HOME/Applications" bash "$tmpdir/install_latest.sh"
+JARVIS_INSTALL_DIR="$HOME/Applications" bash /tmp/install_jarvis.sh
 ```
 
 After the app opens:
