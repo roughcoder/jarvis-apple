@@ -67,14 +67,8 @@ final class AppSettings: ObservableObject {
         dockerChecksEnabled = defaults.object(forKey: Keys.dockerChecksEnabled) as? Bool ?? true
         let storedReleaseRepository = defaults.string(forKey: Keys.appReleaseRepository)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        appReleaseRepository = storedReleaseRepository == AppIdentity.legacyReleaseRepository
-            ? AppIdentity.releaseRepository
-            : storedReleaseRepository ?? AppIdentity.releaseRepository
+        appReleaseRepository = storedReleaseRepository ?? AppIdentity.releaseRepository
         appReleaseGitHubToken = keychain.read(service: Keys.keychainService, account: Keys.githubTokenAccount) ?? ""
-
-        if storedReleaseRepository == AppIdentity.legacyReleaseRepository {
-            defaults.set(appReleaseRepository, forKey: Keys.appReleaseRepository)
-        }
     }
 
     var configuration: JarvisConfiguration {

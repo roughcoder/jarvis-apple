@@ -187,6 +187,13 @@ struct MenuContentView: View {
 
                 Button {
                     NSApplication.shared.activate()
+                    openWindow(id: "setup")
+                } label: {
+                    Label("Setup", systemImage: "wand.and.stars")
+                }
+
+                Button {
+                    NSApplication.shared.activate()
                     openSettings()
                 } label: {
                     Label("Settings", systemImage: "gearshape")
@@ -201,6 +208,210 @@ struct MenuContentView: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
+    }
+}
+
+struct SetupGuideView: View {
+    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var viewModel: JarvisViewModel
+    @Environment(\.openSettings) private var openSettings
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Jarvis Setup")
+                        .font(.title2.weight(.semibold))
+                    Text(settings.installedRoles.isEmpty ? "Choose roles for this Mac." : selectedRoleSummary)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button {
+                    Task { await viewModel.refresh(includeDocker: true) }
+                } label: {
+                    Label("Check", systemImage: "arrow.clockwise")
+                }
+                .disabled(viewModel.isRefreshing)
+            }
+
+            setupChecks
+
+            Divider()
+
+            rolePicker
+
+            Divider()
+
+            pairingIssuer
+
+            Divider()
+
+            HStack(spacing: 10) {
+                Button {
+                    NSApplication.shared.activate()
+                    openSettings()
+                } label: {
+                    Label("Settings", systemImage: "gearshape")
+                }
+
+                Button {
+                    openWindow(id: "command-progress")
+                    Task { await viewModel.installSelectedServices() }
+                } label: {
+                    Label("Install Services", systemImage: "square.and.arrow.down")
+                }
+                .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
+
+                Button {
+                    openWindow(id: "command-progress")
+                    Task { await viewModel.updateInstalledRoles() }
+                } label: {
+                    Label("Update Runtime", systemImage: "arrow.down.circle")
+                }
+                .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
+
+                Spacer()
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding(22)
+    }
+
+    private var selectedRoleSummary: String {
+        settings.installedRoles
+            .sorted { $0.title < $1.title }
+            .map(\.title)
+            .joined(separator: ", ")
+    }
+
+    private var setupChecks: some View {
+        Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 14, verticalSpacing: 10) {
+            SetupCheckRow(
+                title: "Jarvis runtime",
+                level: viewModel.fleetStatus.version == "unknown" ? .unknown : .green,
+                detail: "Version \(viewModel.fleetStatus.version)"
+            )
+            SetupCheckRow(
+                title: "Device",
+                level: viewModel.fleetStatus.deviceID == "unknown" ? .unknown : .green,
+                detail: viewModel.fleetStatus.deviceID
+            )
+            SetupCheckRow(
+                title: "Pairing",
+                level: viewModel.fleetStatus.pairing.identity == "unknown" ? .amber : .green,
+                detail: viewModel.fleetStatus.pairing.detail
+            )
+            SetupCheckRow(
+                title: "Git state",
+                level: viewModel.fleetStatus.git.level,
+                detail: viewModel.fleetStatus.git.detail
+            )
+        }
+    }
+
+    private var rolePicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Roles")
+                .font(.headline)
+
+            ForEach(JarvisRole.allCases) { role in
+                Toggle(isOn: Binding(
+                    get: { settings.installedRoles.contains(role) },
+                    set: { settings.setInstalled($0, for: role) }
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(role.title)
+                            .font(.subheadline.weight(.semibold))
+                        Text(roleDescription(role))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+
+    private var pairingIssuer: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Pair a Device")
+                .font(.headline)
+
+            Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 10) {
+                GridRow {
+                    Text("Device id")
+                        .font(.caption.weight(.semibold))
+                    TextField("kitchen-pi", text: $viewModel.pairingDeviceID)
+                        .textFieldStyle(.roundedBorder)
+                }
+                GridRow {
+                    Text("Identity")
+                        .font(.caption.weight(.semibold))
+                    TextField("optional personal owner", text: $viewModel.pairingIdentity)
+                        .textFieldStyle(.roundedBorder)
+                }
+            }
+
+            HStack(spacing: 10) {
+                Button {
+                    openWindow(id: "command-progress")
+                    Task { await viewModel.issuePairingToken() }
+                } label: {
+                    Label("Issue Token", systemImage: "key")
+                }
+                .disabled(viewModel.isBusy)
+
+                Button {
+                    viewModel.copyLatestPairingEntry()
+                } label: {
+                    Label("Copy Entry", systemImage: "doc.on.doc")
+                }
+                .disabled(viewModel.latestPairingIssue == nil)
+            }
+            .buttonStyle(.bordered)
+
+            if let latestPairingIssue = viewModel.latestPairingIssue {
+                Text(latestPairingIssue.brainDevicesEntry)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(nsColor: .textBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+        }
+    }
+
+    private func roleDescription(_ role: JarvisRole) -> String {
+        switch role {
+        case .brain:
+            "Central voice brain and local service coordinator."
+        case .intercom:
+            "Microphone, wake word, and speaker edge for this Mac."
+        case .worker:
+            "Browser, GUI, shell, and coding worker for this Mac."
+        }
+    }
+}
+
+struct SetupCheckRow: View {
+    let title: String
+    let level: StatusLevel
+    let detail: String
+
+    var body: some View {
+        GridRow {
+            StatusDot(level: level)
+                .frame(width: 10, height: 10)
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
     }
 }
 
@@ -363,9 +574,9 @@ struct SettingsView: View {
             Section("App releases") {
                 TextField("GitHub repo", text: $settings.appReleaseRepository)
                     .textFieldStyle(.roundedBorder)
-                SecureField("GitHub token for private releases", text: $settings.appReleaseGitHubToken)
+                SecureField("GitHub token (optional)", text: $settings.appReleaseGitHubToken)
                     .textFieldStyle(.roundedBorder)
-                Text("Use owner/repo, for example \(AppIdentity.releaseRepository). Private repositories need a token with repo release read access.")
+                Text("Use owner/repo, for example \(AppIdentity.releaseRepository). Public releases do not need a token.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

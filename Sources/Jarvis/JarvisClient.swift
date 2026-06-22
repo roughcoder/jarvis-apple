@@ -6,6 +6,7 @@ enum JarvisClientError: LocalizedError {
     case dirtyWorkingTree(String)
     case noInstalledRoles
     case invalidStatusJSON(String)
+    case invalidPairingJSON(String)
 
     var errorDescription: String? {
         switch self {
@@ -20,6 +21,8 @@ enum JarvisClientError: LocalizedError {
             return "No installed roles are selected in Settings."
         case .invalidStatusJSON(let output):
             return "fleet-status did not return valid JSON.\n\(output)"
+        case .invalidPairingJSON(let output):
+            return "jarvis pair did not return valid JSON.\n\(output)"
         }
     }
 }
@@ -141,6 +144,35 @@ struct JarvisClient {
             partial.append(extra)
         }
         return try await runUV(arguments: arguments, timeout: 300)
+    }
+
+    func installService(role: JarvisRole) async throws -> CommandResult {
+        try await runUV(
+            arguments: ["run", "jarvis", "service", "install", role.rawValue],
+            timeout: 30
+        )
+    }
+
+    func issuePairing(deviceID: String, identity: String = "") async throws -> PairingIssue {
+        var arguments = ["run", "jarvis", "pair", deviceID, "--json"]
+        let trimmedIdentity = identity.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedIdentity.isEmpty {
+            arguments.append(contentsOf: ["--identity", trimmedIdentity])
+        }
+
+        let result = try await runUV(arguments: arguments, timeout: 15)
+        guard result.succeeded else {
+            throw JarvisClientError.commandFailed(result)
+        }
+        guard let data = result.stdout.data(using: .utf8) else {
+            throw JarvisClientError.invalidPairingJSON(result.stdout)
+        }
+
+        do {
+            return try PairingIssueParser.parse(data: data)
+        } catch {
+            throw JarvisClientError.invalidPairingJSON(result.stdout)
+        }
     }
 
     func runUV(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {

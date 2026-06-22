@@ -2,18 +2,13 @@ import XCTest
 @testable import Jarvis
 
 final class HomebrewAppUpdaterTests: XCTestCase {
-    func testFindsGitHubCLIPathWhenAvailable() {
-        let path = HomebrewAppUpdater.defaultGitHubCLIPath()
-
-        XCTAssertTrue(path == nil || path == "/opt/homebrew/bin/gh" || path == "/usr/local/bin/gh")
-    }
-
     func testHelperScriptRunsBrewUpgradeAndReopensApp() {
         XCTAssertTrue(HomebrewAppUpdater.helperScript.contains(#""$BREW_PATH" update"#))
         XCTAssertTrue(HomebrewAppUpdater.helperScript.contains(#""$BREW_PATH" upgrade --cask "$CASK_TOKEN""#))
         XCTAssertTrue(HomebrewAppUpdater.helperScript.contains(#"/usr/bin/xattr -dr com.apple.quarantine "$TARGET_APP""#))
         XCTAssertTrue(HomebrewAppUpdater.helperScript.contains(#"/usr/bin/open "$TARGET_APP""#))
-        XCTAssertTrue(HomebrewAppUpdater.helperScript.contains(#""$GH_PATH" auth token"#))
+        XCTAssertFalse(HomebrewAppUpdater.helperScript.contains("GH_PATH"))
+        XCTAssertFalse(HomebrewAppUpdater.helperScript.contains("HOMEBREW_GITHUB_API_TOKEN"))
     }
 
     func testHelperScriptIsValidBashSyntax() throws {

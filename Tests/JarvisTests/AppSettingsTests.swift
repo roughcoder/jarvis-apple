@@ -3,16 +3,14 @@ import XCTest
 
 final class AppSettingsTests: XCTestCase {
     @MainActor
-    func testMigratesLegacyReleaseRepositoryDefault() {
+    func testUsesDefaultReleaseRepository() {
         let (defaults, suiteName) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
-
-        defaults.set(AppIdentity.legacyReleaseRepository, forKey: "appReleaseRepository")
 
         let settings = AppSettings(defaults: defaults, keychain: KeychainStore())
 
         XCTAssertEqual(settings.appReleaseRepository, AppIdentity.releaseRepository)
-        XCTAssertEqual(defaults.string(forKey: "appReleaseRepository"), AppIdentity.releaseRepository)
+        XCTAssertNil(defaults.string(forKey: "appReleaseRepository"))
     }
 
     @MainActor

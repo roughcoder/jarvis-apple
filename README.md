@@ -49,7 +49,10 @@ Open Settings from the menu bar item and configure:
 - If `jarvis-app` is installed with Homebrew, app release checks use Homebrew
   instead; the Upgrade button launches a detached Homebrew helper, quits Jarvis,
   upgrades the cask, and reopens the app.
-- The menu bar item uses an SF Symbols icon. The current symbol is `robot`,
+- The Setup window installs selected local Jarvis services through the runtime
+  CLI, issues per-device pairing entries, and keeps first-run setup out of raw
+  terminal commands.
+- The menu bar item uses an SF Symbols icon. The current symbol is `brain.head.profile`,
   configured in `AppIdentity.menuBarSymbolName`.
 
 ## Release Loop
@@ -96,14 +99,7 @@ If you need to publish a GitHub Release without touching Homebrew:
 scripts/release_github.sh 0.1.0 --skip-homebrew
 ```
 
-For this private repository, authenticated installs can use `gh`:
-
-```bash
-gh release download --repo roughcoder/jarvis-apple --pattern install_latest.sh --output /tmp/install_jarvis.sh
-bash /tmp/install_jarvis.sh
-```
-
-Public repositories can also install the latest release with:
+Public releases can install the latest app with:
 
 ```bash
 curl -fsSL https://github.com/roughcoder/jarvis-apple/releases/latest/download/install_latest.sh | bash
@@ -120,18 +116,12 @@ Use these steps on a second Mac.
 
 Prerequisites:
 
-- GitHub CLI installed: `brew install gh`
-- Authenticated GitHub CLI session with access to `roughcoder/jarvis-apple`:
-  `gh auth login`
-- A GitHub token with private repository release read access, for the app's
-  Settings window. Fine-grained tokens should allow contents/repository metadata
-  read access for this repository.
+- Public releases can be installed without a GitHub token.
 
 Initial install:
 
 ```bash
-gh release download --repo roughcoder/jarvis-apple --pattern install_latest.sh --output /tmp/install_jarvis.sh --clobber
-bash /tmp/install_jarvis.sh
+curl -fsSL https://github.com/roughcoder/jarvis-apple/releases/latest/download/install_latest.sh | bash
 ```
 
 The installer uses `/Applications` when it is writable. On managed laptops where
@@ -147,17 +137,11 @@ After the app opens:
 1. Open the Jarvis menu bar item.
 2. Open Settings.
 3. Set `GitHub repo` to `roughcoder/jarvis-apple`.
-4. Paste the GitHub token into `GitHub token for private releases`.
-5. Configure the Jarvis repo path, `uv` path, logs path, and installed roles for
+4. Configure the Jarvis repo path, `uv` path, logs path, and installed roles for
    that Mac.
-6. Close Settings.
-7. Use App Release -> Check. On the current release, it should report up to date until a
+5. Close Settings.
+6. Use App Release -> Check. On the current release, it should report up to date until a
    newer release exists.
-
-If an older `Jarvis Menu Bar.app` is already installed, quit it and remove that
-old app bundle after `Jarvis.app` opens successfully. The project now uses one
-broader app name so future menu bar and desktop-chat surfaces can live inside the
-same macOS app.
 
 Self-update test:
 
@@ -180,14 +164,15 @@ If installation fails, the detached helper writes a temporary `install.log` unde
 
 ## Homebrew Direction
 
-The Homebrew tap is a private tap that can hold multiple Infinite Stack tools:
+The Homebrew tap can hold multiple Infinite Stack tools:
 
 ```bash
-brew tap roughcoder/infinite-stack git@github.com:roughcoder/homebrew-infinite-stack.git
-brew trust --tap roughcoder/infinite-stack
-export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
+brew tap roughcoder/infinite-stack
+brew install --HEAD jarvis
 brew install --cask jarvis-app
 xattr -dr com.apple.quarantine /Applications/Jarvis.app
+brew update
+brew upgrade jarvis
 brew upgrade --cask jarvis-app
 xattr -dr com.apple.quarantine /Applications/Jarvis.app
 ```
@@ -198,8 +183,8 @@ machines installed with Homebrew. The in-app updater can remain for direct
 installs, but Brew-managed installs should show update guidance instead of
 replacing the `.app` bundle behind Brew's back.
 
-The quarantine removal is only needed during the private testing phase, while
-Jarvis is ad-hoc signed instead of Developer ID signed and notarized.
+The quarantine removal is needed while Jarvis is ad-hoc signed instead of
+Developer ID signed and notarized.
 
 ## Test
 

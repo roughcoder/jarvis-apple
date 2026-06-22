@@ -14,6 +14,9 @@ final class JarvisViewModel: ObservableObject {
     @Published var isCheckingAppRelease = false
     @Published var isDownloadingAppRelease = false
     @Published var isInstallingAppRelease = false
+    @Published var pairingDeviceID = "room-pi"
+    @Published var pairingIdentity = ""
+    @Published var latestPairingIssue: PairingIssue?
 
     private let settings: AppSettings
     private var pollIteration = 0
@@ -121,6 +124,11 @@ final class JarvisViewModel: ObservableObject {
         lastCommandOutput = ""
 
         do {
+            if try await HomebrewRuntimeClient().installedVersion() != nil {
+                try await updateBrewManagedRuntime(client: client)
+                return
+            }
+
             append("Checking Jarvis status")
             let statusResponse = try await client.fleetStatus(includeDocker: true)
             fleetStatus = statusResponse.status
@@ -168,6 +176,111 @@ final class JarvisViewModel: ObservableObject {
             lastError = readableError(error)
             append("ERROR: \(readableError(error))")
         }
+    }
+
+    private func updateBrewManagedRuntime(client: JarvisClient) async throws {
+        activeOperation = "Updating Jarvis runtime with Homebrew"
+        append("Jarvis runtime is managed by Homebrew as \(AppIdentity.homebrewFormulaToken).")
+
+        let results = try await HomebrewRuntimeClient().update()
+        for result in results {
+            append(result, label: result.arguments.joined(separator: " "))
+            try requireSuccess(result)
+        }
+
+        for role in JarvisRole.allCases where settings.installedRoles.contains(role) {
+            activeOperation = "Restarting \(role.title)"
+            let restart = try await client.launchd(.restart, role: role)
+            append(restart, label: "launchctl kickstart \(role.title)")
+            try requireSuccess(restart)
+        }
+
+        activeOperation = "Refreshing status"
+        let refreshed = try await client.fleetStatus(includeDocker: true)
+        fleetStatus = refreshed.status
+        append(refreshed.command, label: "fleet-status")
+        activeOperation = nil
+        lastError = nil
+    }
+
+    func installSelectedServices() async {
+        guard !settings.installedRoles.isEmpty else {
+            lastError = JarvisClientError.noInstalledRoles.localizedDescription
+            return
+        }
+
+        let client = JarvisClient(configuration: settings.configuration)
+        activeOperation = "Installing Jarvis services"
+        lastError = nil
+        lastCommandOutput = ""
+
+        do {
+            for role in JarvisRole.allCases where settings.installedRoles.contains(role) {
+                activeOperation = "Installing \(role.title)"
+                let install = try await client.installService(role: role)
+                append(install, label: "jarvis service install \(role.rawValue)")
+                try requireSuccess(install)
+
+                activeOperation = "Starting \(role.title)"
+                let start = try await client.launchd(.start, role: role)
+                append(start, label: "launchctl bootstrap \(role.title)")
+                if !start.succeeded && !start.combinedOutput.localizedCaseInsensitiveContains("service already loaded") {
+                    try requireSuccess(start)
+                }
+            }
+
+            activeOperation = "Refreshing status"
+            let refreshed = try await client.fleetStatus(includeDocker: true)
+            fleetStatus = refreshed.status
+            append(refreshed.command, label: "fleet-status")
+            activeOperation = nil
+            lastError = nil
+        } catch {
+            activeOperation = nil
+            lastError = readableError(error)
+            append("ERROR: \(readableError(error))")
+        }
+    }
+
+    func issuePairingToken() async {
+        let deviceID = pairingDeviceID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !deviceID.isEmpty else {
+            lastError = "Enter a device id before issuing a pairing token."
+            return
+        }
+
+        activeOperation = "Issuing pairing token"
+        lastError = nil
+        latestPairingIssue = nil
+
+        do {
+            let issue = try await JarvisClient(configuration: settings.configuration)
+                .issuePairing(deviceID: deviceID, identity: pairingIdentity)
+            latestPairingIssue = issue
+            lastCommandOutput = """
+            Pairing token issued for \(deviceID).
+
+            Token:
+            \(issue.token)
+
+            BRAIN_DEVICES entry:
+            \(issue.brainDevicesEntry)
+            """
+            activeOperation = nil
+        } catch {
+            activeOperation = nil
+            lastError = readableError(error)
+            append("ERROR: \(readableError(error))")
+        }
+    }
+
+    func copyLatestPairingEntry() {
+        guard let latestPairingIssue else {
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(latestPairingIssue.brainDevicesEntry, forType: .string)
+        lastCommandOutput = "Copied BRAIN_DEVICES entry to the clipboard."
     }
 
     func openJarvisRepo() {
@@ -370,8 +483,6 @@ final class JarvisViewModel: ObservableObject {
 
         Run:
 
-        brew trust --tap \(AppIdentity.homebrewTap)
-        export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
         brew update
         brew upgrade --cask \(status.token)
         """

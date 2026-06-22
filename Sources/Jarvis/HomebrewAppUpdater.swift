@@ -45,7 +45,6 @@ struct HomebrewAppUpdater {
         process.arguments = [
             helperURL.path,
             brewPath,
-            Self.defaultGitHubCLIPath() ?? "",
             status.token,
             AppIdentity.homebrewTap,
             AppIdentity.displayName,
@@ -61,25 +60,17 @@ struct HomebrewAppUpdater {
         }
     }
 
-    static func defaultGitHubCLIPath(fileManager: FileManager = .default) -> String? {
-        [
-            "/opt/homebrew/bin/gh",
-            "/usr/local/bin/gh"
-        ].first { fileManager.isExecutableFile(atPath: $0) }
-    }
-
     static let helperScript = """
     #!/usr/bin/env bash
     set -euo pipefail
 
     BREW_PATH="$1"
-    GH_PATH="$2"
-    CASK_TOKEN="$3"
-    TAP_NAME="$4"
-    APP_NAME="$5"
-    APP_PID="$6"
-    WORK_DIR="$7"
-    TARGET_APP="$8"
+    CASK_TOKEN="$2"
+    TAP_NAME="$3"
+    APP_NAME="$4"
+    APP_PID="$5"
+    WORK_DIR="$6"
+    TARGET_APP="$7"
     LOG_PATH="$WORK_DIR/homebrew-update.log"
 
     mkdir -p "$WORK_DIR"
@@ -91,18 +82,6 @@ struct HomebrewAppUpdater {
     trap notify_failure ERR
 
     echo "Preparing Homebrew update for $CASK_TOKEN"
-    TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-}"
-    if [[ -z "$TOKEN" && -n "$GH_PATH" && -x "$GH_PATH" ]]; then
-      TOKEN="$("$GH_PATH" auth token 2>/dev/null || true)"
-    fi
-    if [[ -z "$TOKEN" ]]; then
-      echo "No GitHub token found. Run gh auth login, or set HOMEBREW_GITHUB_API_TOKEN before launching Jarvis."
-      exit 1
-    fi
-    export HOMEBREW_GITHUB_API_TOKEN="$TOKEN"
-
-    echo "Trusting tap $TAP_NAME"
-    "$BREW_PATH" trust --tap "$TAP_NAME" || true
 
     echo "Updating Homebrew metadata"
     "$BREW_PATH" update

@@ -36,5 +36,12 @@ struct JarvisApp: App {
                 .environmentObject(viewModel)
         }
         .defaultSize(width: 760, height: 520)
+
+        Window("Jarvis Setup", id: "setup") {
+            SetupGuideView()
+                .environmentObject(settings)
+                .environmentObject(viewModel)
+        }
+        .defaultSize(width: 720, height: 560)
     }
 }

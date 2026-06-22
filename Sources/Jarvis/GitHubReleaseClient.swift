@@ -138,7 +138,6 @@ private struct GitHubReleaseAsset: Decodable {
 private extension Array where Element == GitHubReleaseAsset {
     var preferredInstallAsset: GitHubReleaseAsset? {
         first { $0.name == AppIdentity.releaseAssetName }
-            ?? first { $0.name == AppIdentity.legacyReleaseAssetName }
             ?? first { $0.name.localizedCaseInsensitiveContains("Jarvis") && $0.name.hasSuffix(".zip") }
             ?? first { $0.name.hasSuffix(".dmg") }
             ?? first { $0.name.hasSuffix(".zip") }

@@ -1,0 +1,40 @@
+name: Public readiness
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject tracked build and release artifacts
+        run: |
+          set -euo pipefail
+          blocked="$(
+            git ls-files \
+              | grep -E '(^|/)(\.env$|\.env\.|dist/|DerivedData/|\.build/|xcuserdata/|\.DS_Store$|.*\.zip$|.*\.dmg$)' \
+              || true
+          )"
+          if [[ -n "$blocked" ]]; then
+            echo "Tracked files are not public-safe:"
+            echo "$blocked"
+            exit 1
+          fi
+      - name: Reject checked-in secret values
+        run: |
+          set -euo pipefail
+          hits="$(
+            git ls-files \
+              | xargs grep -IlE '(ghp_|github_pat_|sk-[A-Za-z0-9]{20,}|BEGIN (RSA|OPENSSH|PRIVATE) KEY)' \
+              || true
+          )"
+          if [[ -n "$hits" ]]; then
+            echo "Possible checked-in secret values:"
+            echo "$hits"
+            exit 1
+          fi
+

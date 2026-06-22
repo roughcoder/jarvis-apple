@@ -10,12 +10,11 @@ enum AppIdentity {
     static let keychainService = macOSBundleIdentifier
 
     static let releaseRepository = "roughcoder/jarvis-apple"
-    static let legacyReleaseRepository = "roughcoder/jarvis-swift-toolbar"
 
     static let releaseAssetName = "Jarvis-macos.zip"
-    static let legacyReleaseAssetName = "JarvisMenuBar-macos.zip"
 
     static let homebrewTap = "roughcoder/infinite-stack"
     static let homebrewTapRepository = "roughcoder/homebrew-infinite-stack"
+    static let homebrewFormulaToken = "jarvis"
     static let homebrewCaskToken = "jarvis-app"
 }

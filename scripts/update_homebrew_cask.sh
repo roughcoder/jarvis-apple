@@ -12,7 +12,6 @@ Environment:
   HOMEBREW_TAP_DIR=/path/to/homebrew-infinite-stack
   HOMEBREW_TAP_NAME=roughcoder/infinite-stack
   HOMEBREW_CASK_TOKEN=jarvis-app
-  HOMEBREW_GITHUB_API_TOKEN=token
 
 Example:
   scripts/update_homebrew_cask.sh 0.2.3 roughcoder/jarvis-apple
@@ -70,14 +69,14 @@ fi
 
 git -C "$TAP_DIR" pull --ff-only
 
-ASSET_API_URL="$(
+ASSET_EXISTS="$(
   gh release view "$TAG" \
     --repo "$REPOSITORY" \
     --json assets \
-    -q ".assets[] | select(.name == \"$ASSET_NAME\") | .apiUrl"
+    -q ".assets[] | select(.name == \"$ASSET_NAME\") | .name"
 )"
 
-if [[ -z "$ASSET_API_URL" ]]; then
+if [[ -z "$ASSET_EXISTS" ]]; then
   echo "Release $TAG in $REPOSITORY does not include $ASSET_NAME." >&2
   exit 1
 fi
@@ -96,11 +95,13 @@ if [[ ! "$SHA256" =~ ^[0-9a-f]{64}$ ]]; then
   exit 1
 fi
 
-CASK_FILE="$CASK_FILE" VERSION="$VERSION" SHA256="$SHA256" ASSET_API_URL="$ASSET_API_URL" ruby <<'RUBY'
+CASK_FILE="$CASK_FILE" VERSION="$VERSION" SHA256="$SHA256" REPOSITORY="$REPOSITORY" ASSET_NAME="$ASSET_NAME" ruby <<'RUBY'
 path = ENV.fetch("CASK_FILE")
 version = ENV.fetch("VERSION")
 sha256 = ENV.fetch("SHA256")
-asset_api_url = ENV.fetch("ASSET_API_URL")
+repository = ENV.fetch("REPOSITORY")
+asset_name = ENV.fetch("ASSET_NAME")
+public_url = "https://github.com/#{repository}/releases/download/v\#{version}/#{asset_name}"
 
 text = File.read(path)
 
@@ -111,19 +112,20 @@ end
 
 replace!(text, /^  version "[^"]+"$/, %(  version "#{version}"), "version")
 replace!(text, /^  sha256 "[0-9a-f]{64}"$/, %(  sha256 "#{sha256}"), "sha256")
-replace!(
-  text,
-  %r{^  url "https://api\.github\.com/repos/.+/releases/assets/\d+\?version=#\{version\}",$},
-  %(  url "#{asset_api_url}?version=\#{version}",),
-  "url"
-)
+lines = text.lines
+url_index = lines.index { |line| line.match?(%r{^  url "https://(?:api\.)?github\.com/}) }
+abort "Could not update url in #{path}" unless url_index
+
+lines[url_index] = %(  url "#{public_url}"\n)
+if lines[url_index + 1]&.start_with?("      header: [")
+  close_index = (url_index + 1...lines.length).find { |index| lines[index].strip == "]" }
+  abort "Could not remove legacy cask header block in #{path}" unless close_index
+  lines.slice!(url_index + 1, close_index - url_index)
+end
+text = lines.join
 
 File.write(path, text)
 RUBY
-
-if [[ -z "${HOMEBREW_GITHUB_API_TOKEN:-}" ]]; then
-  export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
-fi
 
 CASK_CHANGED=0
 if ! git -C "$TAP_DIR" diff --quiet -- "$CASK_RELATIVE_PATH"; then
@@ -131,11 +133,11 @@ if ! git -C "$TAP_DIR" diff --quiet -- "$CASK_RELATIVE_PATH"; then
   git -C "$TAP_DIR" add "$CASK_RELATIVE_PATH"
   git -C "$TAP_DIR" commit -m "Update Jarvis app cask to $VERSION
 
-Constraint: Homebrew cask must track the private GitHub release asset API URL
-Rejected: use the browser download URL | private release assets require authenticated API access
+Constraint: public Homebrew installs must not require GitHub API tokens
+Rejected: use the GitHub release asset API URL | it keeps public installs coupled to private-release auth
 Confidence: high
 Scope-risk: narrow
-Directive: update version, sha256, and release asset API URL together for every Jarvis app release
+Directive: update version, sha256, and public release download URL together for every Jarvis app release
 Tested: brew style --cask $TAP_NAME/$CASK_TOKEN; brew audit --cask $TAP_NAME/$CASK_TOKEN; brew fetch --cask --force $TAP_NAME/$CASK_TOKEN
 Not-tested: brew install --cask $CASK_TOKEN followed by quarantine removal"
 else
