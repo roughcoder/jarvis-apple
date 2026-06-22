@@ -188,6 +188,12 @@ final class JarvisViewModel: ObservableObject {
             try requireSuccess(result)
         }
 
+        activeOperation = "Syncing role dependencies"
+        append("Sync extras: \(JarvisClient.syncExtras(for: settings.installedRoles).joined(separator: ", "))")
+        let sync = try await client.uvSyncForInstalledRoles()
+        append(sync, label: "jarvis service sync")
+        try requireSuccess(sync)
+
         for role in JarvisRole.allCases where settings.installedRoles.contains(role) {
             activeOperation = "Restarting \(role.title)"
             let restart = try await client.launchd(.restart, role: role)
@@ -215,6 +221,12 @@ final class JarvisViewModel: ObservableObject {
         lastCommandOutput = ""
 
         do {
+            activeOperation = "Syncing role dependencies"
+            append("Sync extras: \(JarvisClient.syncExtras(for: settings.installedRoles).joined(separator: ", "))")
+            let sync = try await client.uvSyncForInstalledRoles()
+            append(sync, label: "jarvis service sync")
+            try requireSuccess(sync)
+
             for role in JarvisRole.allCases where settings.installedRoles.contains(role) {
                 activeOperation = "Installing \(role.title)"
                 let install = try await client.installService(role: role)
