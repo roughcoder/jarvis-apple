@@ -5,6 +5,7 @@ struct MenuContentView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var viewModel: JarvisViewModel
     @Environment(\.openWindow) private var openWindow
+    @State private var setupProfile: SetupProfile = .custom
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -213,6 +214,7 @@ struct SetupGuideView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var viewModel: JarvisViewModel
     @Environment(\.openWindow) private var openWindow
+    @State private var setupProfile: SetupProfile = .custom
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -313,10 +315,23 @@ struct SetupGuideView: View {
             Text("Roles")
                 .font(.headline)
 
+            Picker("Setup profile", selection: $setupProfile) {
+                ForEach(SetupProfile.allCases) { profile in
+                    Text(profile.title).tag(profile)
+                }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: setupProfile) { _, profile in
+                apply(profile)
+            }
+
             ForEach(JarvisRole.allCases) { role in
                 Toggle(isOn: Binding(
                     get: { settings.installedRoles.contains(role) },
-                    set: { settings.setInstalled($0, for: role) }
+                    set: {
+                        settings.setInstalled($0, for: role)
+                        setupProfile = .custom
+                    }
                 )) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(role.title)
@@ -400,6 +415,64 @@ struct SetupGuideView: View {
             "Microphone, wake word, and speaker edge for this Mac."
         case .worker:
             "Browser, GUI, shell, and coding worker for this Mac."
+        }
+    }
+
+    private func apply(_ profile: SetupProfile) {
+        guard profile != .custom else {
+            return
+        }
+        settings.installedRoles = profile.roles
+        if !profile.defaultPairingDeviceID.isEmpty {
+            viewModel.pairingDeviceID = profile.defaultPairingDeviceID
+        }
+        if !profile.defaultIdentity.isEmpty {
+            viewModel.pairingIdentity = profile.defaultIdentity
+        }
+    }
+}
+
+enum SetupProfile: String, CaseIterable, Identifiable {
+    case brainMac
+    case laptop
+    case workerOnly
+    case roomPi
+    case custom
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .brainMac: "Brain Mac"
+        case .laptop: "Laptop"
+        case .workerOnly: "Worker"
+        case .roomPi: "Room Pi"
+        case .custom: "Custom"
+        }
+    }
+
+    var roles: Set<JarvisRole> {
+        switch self {
+        case .brainMac: [.brain, .worker, .intercom]
+        case .laptop: [.intercom, .worker]
+        case .workerOnly: [.worker]
+        case .roomPi: []
+        case .custom: []
+        }
+    }
+
+    var defaultPairingDeviceID: String {
+        switch self {
+        case .roomPi: "room-pi"
+        case .laptop: "laptop"
+        case .brainMac, .workerOnly, .custom: ""
+        }
+    }
+
+    var defaultIdentity: String {
+        switch self {
+        case .laptop: NSUserName()
+        case .brainMac, .workerOnly, .roomPi, .custom: ""
         }
     }
 }
