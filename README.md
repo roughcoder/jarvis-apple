@@ -46,6 +46,10 @@ Open Settings from the menu bar item and configure:
 - Update is explicit and blocks when the Jarvis git working tree is dirty.
 - Status JSON and command output are redacted before display or clipboard copy.
 - App release checks read GitHub Releases and can install newer packaged app releases.
+- If `jarvis-app` is installed with Homebrew, app release checks use Homebrew
+  instead and show Brew upgrade guidance instead of replacing the app bundle.
+- The menu bar item uses an SF Symbols icon. The current symbol is `robot`,
+  configured in `AppIdentity.menuBarSymbolName`.
 
 ## Release Loop
 
@@ -179,6 +183,7 @@ The Homebrew tap is a private tap that can hold multiple Infinite Stack tools:
 
 ```bash
 brew tap roughcoder/infinite-stack git@github.com:roughcoder/homebrew-infinite-stack.git
+brew trust --tap roughcoder/infinite-stack
 export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
 brew install --cask --no-quarantine jarvis-app
 brew upgrade --cask jarvis-app

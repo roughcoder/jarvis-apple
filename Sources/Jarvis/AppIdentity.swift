@@ -3,6 +3,7 @@ import Foundation
 enum AppIdentity {
     static let displayName = "Jarvis"
     static let executableName = "Jarvis"
+    static let menuBarSymbolName = "robot"
     static let macOSBundleIdentifier = "dev.infinitestack.jarvis.mac"
     static let iOSBundleIdentifier = "dev.infinitestack.jarvis.ios"
     static let bundleIdentifier = macOSBundleIdentifier
@@ -13,4 +14,8 @@ enum AppIdentity {
 
     static let releaseAssetName = "Jarvis-macos.zip"
     static let legacyReleaseAssetName = "JarvisMenuBar-macos.zip"
+
+    static let homebrewTap = "roughcoder/infinite-stack"
+    static let homebrewTapRepository = "roughcoder/homebrew-infinite-stack"
+    static let homebrewCaskToken = "jarvis-app"
 }

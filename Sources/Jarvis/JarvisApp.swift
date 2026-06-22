@@ -22,7 +22,7 @@ struct JarvisApp: App {
                     await viewModel.startPolling()
                 }
         } label: {
-            Label("Jarvis", systemImage: viewModel.fleetStatus.overall.symbolName)
+            Label("Jarvis", systemImage: AppIdentity.menuBarSymbolName)
         }
         .menuBarExtraStyle(.window)
 

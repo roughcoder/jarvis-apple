@@ -95,7 +95,7 @@ struct MenuContentView: View {
                     openWindow(id: "command-progress")
                     Task { await viewModel.installLatestAppRelease() }
                 } label: {
-                    Label("Install", systemImage: "arrow.down.app")
+                    Label(viewModel.appReleaseActionTitle, systemImage: viewModel.appReleaseActionSymbol)
                 }
                 .disabled(viewModel.isInstallingAppRelease || !viewModel.canInstallAppRelease)
 

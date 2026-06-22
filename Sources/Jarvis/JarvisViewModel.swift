@@ -9,6 +9,7 @@ final class JarvisViewModel: ObservableObject {
     @Published var lastCommandOutput = ""
     @Published var lastError: String?
     @Published var latestAppRelease: AppRelease?
+    @Published var homebrewCaskStatus: HomebrewCaskStatus?
     @Published var appReleaseStatus = "Not checked"
     @Published var isCheckingAppRelease = false
     @Published var isDownloadingAppRelease = false
@@ -31,14 +32,28 @@ final class JarvisViewModel: ObservableObject {
     }
 
     var hasInstallableAppRelease: Bool {
-        latestAppRelease?.assetURL != nil || latestAppRelease?.assetAPIURL != nil
+        if homebrewCaskStatus != nil {
+            return false
+        }
+        return latestAppRelease?.assetURL != nil || latestAppRelease?.assetAPIURL != nil
     }
 
     var canInstallAppRelease: Bool {
+        if let homebrewCaskStatus {
+            return homebrewCaskStatus.isOutdated
+        }
         guard let latestAppRelease, hasInstallableAppRelease else {
             return false
         }
         return AppVersion.isRelease(latestAppRelease.tagName, newerThan: currentAppVersion)
+    }
+
+    var appReleaseActionTitle: String {
+        homebrewCaskStatus == nil ? "Install" : "Brew"
+    }
+
+    var appReleaseActionSymbol: String {
+        homebrewCaskStatus == nil ? "arrow.down.app" : "terminal"
     }
 
     func startPolling() async {
@@ -174,19 +189,34 @@ final class JarvisViewModel: ObservableObject {
     }
 
     func checkForAppRelease(silent: Bool = false) async {
-        let repository = settings.appReleaseRepository.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !repository.isEmpty else {
-            appReleaseStatus = "No GitHub release repo configured"
-            return
-        }
-
         isCheckingAppRelease = true
         if !silent {
-            appReleaseStatus = "Checking GitHub Releases"
+            appReleaseStatus = "Checking app releases"
         }
         defer { isCheckingAppRelease = false }
 
         do {
+            if let brewStatus = try await HomebrewReleaseClient().caskStatus(updateHomebrew: !silent) {
+                homebrewCaskStatus = brewStatus
+                latestAppRelease = nil
+                if brewStatus.isOutdated {
+                    appReleaseStatus = "Homebrew \(brewStatus.displayLatestVersion) available"
+                } else {
+                    appReleaseStatus = "Homebrew up to date (\(brewStatus.installedVersion))"
+                }
+                return
+            }
+
+            homebrewCaskStatus = nil
+            let repository = settings.appReleaseRepository.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !repository.isEmpty else {
+                appReleaseStatus = "No GitHub release repo configured"
+                return
+            }
+
+            if !silent {
+                appReleaseStatus = "Checking GitHub Releases"
+            }
             let release = try await GitHubReleaseClient().latestRelease(
                 repository: repository,
                 token: settings.appReleaseGitHubToken
@@ -199,6 +229,7 @@ final class JarvisViewModel: ObservableObject {
             }
         } catch {
             latestAppRelease = nil
+            homebrewCaskStatus = nil
             appReleaseStatus = readableError(error)
             if !silent {
                 lastError = readableError(error)
@@ -257,6 +288,11 @@ final class JarvisViewModel: ObservableObject {
             return
         }
 
+        if let homebrewCaskStatus {
+            showHomebrewUpdateInstructions(for: homebrewCaskStatus)
+            return
+        }
+
         guard latestAppRelease != nil else {
             await checkForAppRelease()
             guard latestAppRelease != nil else {
@@ -306,12 +342,33 @@ final class JarvisViewModel: ObservableObject {
     }
 
     func openLatestAppRelease() {
-        if let release = latestAppRelease {
+        if homebrewCaskStatus != nil,
+           let url = URL(string: "https://github.com/\(AppIdentity.homebrewTapRepository)/blob/main/Casks/\(AppIdentity.homebrewCaskToken).rb") {
+            NSWorkspace.shared.open(url)
+        } else if let release = latestAppRelease {
             NSWorkspace.shared.open(release.htmlURL)
         } else if let repository = try? GitHubReleaseClient.normalizedRepository(settings.appReleaseRepository),
                   let url = URL(string: "https://github.com/\(repository)/releases/latest") {
             NSWorkspace.shared.open(url)
         }
+    }
+
+    private func showHomebrewUpdateInstructions(for status: HomebrewCaskStatus) {
+        appReleaseStatus = "Update with Homebrew"
+        lastError = nil
+        lastCommandOutput = """
+        Jarvis is installed with Homebrew as \(status.token).
+
+        Current: \(status.installedVersion)
+        Latest: \(status.displayLatestVersion)
+
+        Run:
+
+        brew trust --tap \(AppIdentity.homebrewTap)
+        export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
+        brew update
+        brew upgrade --cask \(status.token)
+        """
     }
 
     private func perform(_ title: String, operation: () async throws -> CommandResult) async {
