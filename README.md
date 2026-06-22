@@ -52,6 +52,8 @@ Open Settings from the menu bar item and configure:
 - The Setup window installs selected local Jarvis services through the runtime
   CLI, issues per-device pairing entries, and keeps first-run setup out of raw
   terminal commands.
+- Fresh installs open the Setup window automatically the first time the app
+  launches, before any roles are configured.
 - The menu bar item uses an SF Symbols icon. The current symbol is `brain.head.profile`,
   configured in `AppIdentity.menuBarSymbolName`.
 

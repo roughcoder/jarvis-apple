@@ -8,9 +8,16 @@ struct JarvisApp: App {
 
     init() {
         let settings = AppSettings()
+        let viewModel = JarvisViewModel(settings: settings)
         _settings = StateObject(wrappedValue: settings)
-        _viewModel = StateObject(wrappedValue: JarvisViewModel(settings: settings))
+        _viewModel = StateObject(wrappedValue: viewModel)
         NSApplication.shared.setActivationPolicy(.accessory)
+        if settings.shouldAutoOpenSetup {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                SetupWindowPresenter.shared.show(settings: settings, viewModel: viewModel)
+                settings.markSetupAutoOpened()
+            }
+        }
     }
 
     var body: some Scene {

@@ -71,6 +71,10 @@ final class AppSettings: ObservableObject {
         appReleaseGitHubToken = keychain.read(service: Keys.keychainService, account: Keys.githubTokenAccount) ?? ""
     }
 
+    var shouldAutoOpenSetup: Bool {
+        !defaults.bool(forKey: Keys.didAutoOpenSetup) && installedRoles.isEmpty
+    }
+
     var configuration: JarvisConfiguration {
         JarvisConfiguration(
             jarvisRepoPath: jarvisRepoPath,
@@ -90,6 +94,10 @@ final class AppSettings: ObservableObject {
         } else {
             installedRoles.remove(role)
         }
+    }
+
+    func markSetupAutoOpened() {
+        defaults.set(true, forKey: Keys.didAutoOpenSetup)
     }
 
     private func save() {
@@ -118,6 +126,7 @@ final class AppSettings: ObservableObject {
         static let pollInterval = "pollInterval"
         static let dockerChecksEnabled = "dockerChecksEnabled"
         static let appReleaseRepository = "appReleaseRepository"
+        static let didAutoOpenSetup = "didAutoOpenSetup"
         static let keychainService = AppIdentity.keychainService
         static let githubTokenAccount = "github-release-token"
     }
