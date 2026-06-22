@@ -18,7 +18,11 @@ final class JarvisClientTests: XCTestCase {
         XCTAssertNil(invocation.currentDirectory)
         XCTAssertEqual(
             client.serviceInstallArguments(role: .brain),
-            ["service", "install", "brain", "--jarvis-bin", "/opt/homebrew/bin/jarvis"]
+            [
+                "service", "install", "brain",
+                "--jarvis-bin", "/opt/homebrew/bin/jarvis",
+                "--workdir", JarvisClient.defaultInstalledWorkdir
+            ]
         )
     }
 

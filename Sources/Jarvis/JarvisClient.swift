@@ -61,6 +61,7 @@ enum DockerAction {
 struct JarvisClient {
     let configuration: JarvisConfiguration
     var runner = CommandRunner()
+    static let defaultInstalledWorkdir = "\(NSHomeDirectory())/.jarvis"
 
     func fleetStatus(includeDocker: Bool) async throws -> FleetStatusResponse {
         var arguments = ["fleet-status", "--json"]
@@ -165,7 +166,10 @@ struct JarvisClient {
     func serviceInstallArguments(role: JarvisRole) -> [String] {
         var arguments = ["service", "install", role.rawValue]
         if runtimeMode() == .installed {
-            arguments.append(contentsOf: ["--jarvis-bin", configuration.jarvisPath])
+            arguments.append(contentsOf: [
+                "--jarvis-bin", configuration.jarvisPath,
+                "--workdir", Self.defaultInstalledWorkdir
+            ])
         }
         return arguments
     }

@@ -59,6 +59,8 @@ Open Settings from the menu bar item and configure:
   checks worker GUI readiness with `jarvis worker --doctor`, issues per-device
   pairing entries, and can copy a Raspberry Pi installer command when a brain
   host is configured.
+- Packaged installs pass `--workdir ~/.jarvis` during service installation so
+  launchd services load local configuration from `~/.jarvis/.env`.
 - Fresh installs open the Setup window automatically the first time the app
   launches, before any roles are configured.
 - The menu bar item uses an SF Symbols icon. The current symbol is `brain.head.profile`,
