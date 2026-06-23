@@ -16,6 +16,7 @@ final class JarvisClientTests: XCTestCase {
         XCTAssertEqual(invocation.executable, "/opt/homebrew/bin/jarvis")
         XCTAssertEqual(invocation.arguments, ["fleet-status", "--json"])
         XCTAssertNil(invocation.currentDirectory)
+        XCTAssertEqual(invocation.environment, ["JARVIS_ENV_FILE": "\(JarvisClient.defaultInstalledWorkdir)/.env"])
         XCTAssertEqual(
             client.serviceInstallArguments(role: .brain),
             [
@@ -40,6 +41,7 @@ final class JarvisClientTests: XCTestCase {
         XCTAssertEqual(invocation.executable, "/bin/echo")
         XCTAssertEqual(invocation.arguments, ["run", "jarvis", "pair", "room-pi", "--json"])
         XCTAssertEqual(invocation.currentDirectory, directory.path)
+        XCTAssertEqual(invocation.environment, [:])
         XCTAssertEqual(client.serviceInstallArguments(role: .worker), ["service", "install", "worker"])
     }
 

@@ -113,6 +113,13 @@ final class AppSettings: ObservableObject {
         defaults.set(true, forKey: Keys.didAutoOpenSetup)
     }
 
+    func resetInstalledState() {
+        installedRoles = []
+        pairingBrainHost = ""
+        jarvisRepoPath = ""
+        defaults.set(false, forKey: Keys.didAutoOpenSetup)
+    }
+
     private func save() {
         defaults.set(jarvisRepoPath, forKey: Keys.jarvisRepoPath)
         defaults.set(jarvisPath, forKey: Keys.jarvisPath)
@@ -149,12 +156,7 @@ final class AppSettings: ObservableObject {
     }
 
     private static var defaultJarvisRepoPath: String {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let candidates = [
-            "\(home)/Development/jarvis",
-            "\(home)/jarvis"
-        ]
-        return candidates.first { FileManager.default.fileExists(atPath: $0) } ?? "\(home)/Development/jarvis"
+        ""
     }
 
     private static var defaultUVPath: String {

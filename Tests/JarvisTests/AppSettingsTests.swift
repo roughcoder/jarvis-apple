@@ -10,6 +10,7 @@ final class AppSettingsTests: XCTestCase {
         let settings = AppSettings(defaults: defaults, keychain: KeychainStore())
 
         XCTAssertEqual(settings.appReleaseRepository, AppIdentity.releaseRepository)
+        XCTAssertEqual(settings.jarvisRepoPath, "")
         XCTAssertFalse(settings.jarvisPath.isEmpty)
         XCTAssertNil(defaults.string(forKey: "appReleaseRepository"))
     }
@@ -35,6 +36,29 @@ final class AppSettingsTests: XCTestCase {
         settings.pairingBrainHost = " imac.private "
 
         XCTAssertEqual(defaults.string(forKey: "pairingBrainHost"), "imac.private")
+    }
+
+    @MainActor
+    func testResetInstalledStateClearsPackagedInstallState() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = AppSettings(defaults: defaults, keychain: KeychainStore())
+        settings.installedRoles = [.brain, .worker]
+        settings.pairingBrainHost = "100.76.46.92"
+        settings.jarvisRepoPath = "/Users/neilbarton/Development/jarvis"
+        settings.markSetupAutoOpened()
+
+        settings.resetInstalledState()
+
+        XCTAssertEqual(settings.installedRoles, [])
+        XCTAssertEqual(settings.pairingBrainHost, "")
+        XCTAssertEqual(settings.jarvisRepoPath, "")
+        XCTAssertTrue(settings.shouldAutoOpenSetup)
+        XCTAssertEqual(defaults.stringArray(forKey: "installedRoles"), [])
+        XCTAssertEqual(defaults.string(forKey: "pairingBrainHost"), "")
+        XCTAssertEqual(defaults.string(forKey: "jarvisRepoPath"), "")
+        XCTAssertFalse(defaults.bool(forKey: "didAutoOpenSetup"))
     }
 
     @MainActor

@@ -21,6 +21,7 @@ struct CommandRunner {
         executable: String,
         arguments: [String],
         currentDirectory: String? = nil,
+        environment: [String: String] = [:],
         timeout: TimeInterval = 15
     ) async throws -> CommandResult {
         try await Task.detached(priority: .userInitiated) {
@@ -28,6 +29,7 @@ struct CommandRunner {
                 executable: executable,
                 arguments: arguments,
                 currentDirectory: currentDirectory,
+                environment: environment,
                 timeout: timeout,
                 redactsOutput: redactsOutput
             )
@@ -38,6 +40,7 @@ struct CommandRunner {
         executable: String,
         arguments: [String],
         currentDirectory: String?,
+        environment: [String: String],
         timeout: TimeInterval,
         redactsOutput: Bool
     ) throws -> CommandResult {
@@ -52,6 +55,13 @@ struct CommandRunner {
         process.arguments = arguments
         if let currentDirectory {
             process.currentDirectoryURL = URL(fileURLWithPath: FilePath.expandingTilde(in: currentDirectory))
+        }
+        if !environment.isEmpty {
+            var merged = ProcessInfo.processInfo.environment
+            for (key, value) in environment {
+                merged[key] = FilePath.expandingTilde(in: value)
+            }
+            process.environment = merged
         }
 
         let stdoutPipe = Pipe()

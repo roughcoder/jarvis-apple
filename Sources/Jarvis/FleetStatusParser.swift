@@ -116,7 +116,8 @@ enum FleetStatusParser {
             role: role,
             level: level,
             headline: headline(for: role, level: level, loaded: loaded, reachable: reachable, paired: paired),
-            detail: roleDetail(roleNode: roleNode, serviceNode: serviceNode, loaded: loaded, reachable: reachable, paired: paired)
+            detail: roleDetail(roleNode: roleNode, serviceNode: serviceNode, loaded: loaded, reachable: reachable, paired: paired),
+            loaded: loaded
         )
     }
 

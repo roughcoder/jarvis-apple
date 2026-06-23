@@ -73,6 +73,7 @@ struct RoleStatus: Identifiable, Equatable {
     let level: StatusLevel
     let headline: String
     let detail: String
+    let loaded: Bool?
 
     var id: JarvisRole { role }
 }
@@ -122,7 +123,7 @@ struct FleetStatus: Equatable {
         deviceID: "unknown",
         platform: "unknown",
         roles: JarvisRole.allCases.map {
-            RoleStatus(role: $0, level: .unknown, headline: "Unknown", detail: "No status has been loaded yet.")
+            RoleStatus(role: $0, level: .unknown, headline: "Unknown", detail: "No status has been loaded yet.", loaded: nil)
         },
         docker: DockerStatus(level: .unknown, headline: "Unknown", detail: "No Docker status has been loaded yet."),
         git: GitStatus(level: .unknown, branch: "unknown", revision: "unknown", dirty: nil, detail: "No git status has been loaded yet."),

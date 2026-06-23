@@ -1,14 +1,28 @@
 import AppKit
+import SwiftUI
 
 @MainActor
 enum AppWindowPresenter {
-    static func openSettings() {
-        NSApplication.shared.activate()
+    private static var settingsWindow: NSWindow?
 
-        if NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) {
+    static func openSettings(settings: AppSettings) {
+        if let settingsWindow {
+            settingsWindow.makeKeyAndOrderFront(nil)
+            NSApplication.shared.activate()
             return
         }
 
-        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+        let content = SettingsView()
+            .environmentObject(settings)
+        let hostingController = NSHostingController(rootView: content)
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "Jarvis Settings"
+        window.setContentSize(NSSize(width: 560, height: 450))
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.isReleasedWhenClosed = false
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApplication.shared.activate()
+        settingsWindow = window
     }
 }

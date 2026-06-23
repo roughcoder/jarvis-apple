@@ -52,6 +52,12 @@ final class JarvisViewModel: ObservableObject {
         return AppVersion.isRelease(latestAppRelease.tagName, newerThan: currentAppVersion)
     }
 
+    var selectedServicesAreLoaded: Bool {
+        !settings.installedRoles.isEmpty && settings.installedRoles.allSatisfy { role in
+            fleetStatus.roles.first { $0.role == role }?.loaded == true
+        }
+    }
+
     var appReleaseActionTitle: String {
         homebrewCaskStatus == nil ? "Install" : "Upgrade"
     }
@@ -215,6 +221,10 @@ final class JarvisViewModel: ObservableObject {
             lastError = JarvisClientError.noInstalledRoles.localizedDescription
             return
         }
+        if selectedServicesAreLoaded {
+            lastCommandOutput = "Selected Jarvis services are already installed. Use Update Runtime, restart individual services, or Clean Uninstall before reinstalling."
+            return
+        }
 
         let client = JarvisClient(configuration: settings.configuration)
         activeOperation = "Installing Jarvis services"
@@ -248,6 +258,40 @@ final class JarvisViewModel: ObservableObject {
             append(refreshed.command, label: "fleet-status")
             activeOperation = nil
             lastError = nil
+        } catch {
+            activeOperation = nil
+            lastError = readableError(error)
+            append("ERROR: \(readableError(error))")
+        }
+    }
+
+    func cleanUninstallLocalState() async {
+        activeOperation = "Clean uninstalling Jarvis services"
+        lastError = nil
+        lastCommandOutput = ""
+
+        let client = JarvisClient(configuration: settings.configuration)
+        do {
+            for role in JarvisRole.allCases {
+                activeOperation = "Stopping \(role.title)"
+                let stop = try await client.launchd(.stop, role: role)
+                append(stop, label: "launchctl bootout \(role.title)")
+                if !stop.succeeded && !stop.combinedOutput.localizedCaseInsensitiveContains("could not find specified service") {
+                    append("Ignoring stop result for \(role.title): \(stop.combinedOutput)")
+                }
+            }
+
+            activeOperation = "Removing launch agents and local state"
+            for role in JarvisRole.allCases {
+                try removePath(FilePath.expandingTilde(in: role.launchAgentPath))
+            }
+            try removePath(JarvisClient.defaultInstalledWorkdir)
+            try removePath(FilePath.expandingTilde(in: settings.logsPath))
+            settings.resetInstalledState()
+
+            activeOperation = nil
+            append("Clean uninstall complete. The Jarvis app and Homebrew runtime are still installed; local services, launch agents, logs, and ~/.jarvis were removed.")
+            await refresh(includeDocker: true)
         } catch {
             activeOperation = nil
             lastError = readableError(error)
@@ -732,6 +776,15 @@ final class JarvisViewModel: ObservableObject {
             return description
         }
         return error.localizedDescription
+    }
+
+    private func removePath(_ path: String) throws {
+        guard FileManager.default.fileExists(atPath: path) else {
+            append("Already absent: \(path)")
+            return
+        }
+        try FileManager.default.removeItem(atPath: path)
+        append("Removed \(path)")
     }
 
     private var fullRefreshModulo: Int {

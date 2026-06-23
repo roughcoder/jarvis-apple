@@ -36,6 +36,7 @@ struct JarvisInvocation: Equatable {
     let executable: String
     let arguments: [String]
     let currentDirectory: String?
+    let environment: [String: String]
     let mode: RuntimeMode
 
     enum RuntimeMode: Equatable {
@@ -336,6 +337,7 @@ struct JarvisClient {
             executable: configuration.uvPath,
             arguments: arguments,
             currentDirectory: configuration.jarvisRepoPath,
+            environment: [:],
             timeout: timeout
         )
     }
@@ -346,6 +348,7 @@ struct JarvisClient {
             executable: invocation.executable,
             arguments: invocation.arguments,
             currentDirectory: invocation.currentDirectory,
+            environment: invocation.environment,
             timeout: timeout
         )
     }
@@ -356,6 +359,7 @@ struct JarvisClient {
                 executable: configuration.uvPath,
                 arguments: ["run", "jarvis"] + arguments,
                 currentDirectory: configuration.jarvisRepoPath,
+                environment: [:],
                 mode: .checkout
             )
         }
@@ -364,6 +368,7 @@ struct JarvisClient {
             executable: configuration.jarvisPath,
             arguments: arguments,
             currentDirectory: nil,
+            environment: ["JARVIS_ENV_FILE": "\(Self.defaultInstalledWorkdir)/.env"],
             mode: .installed
         )
     }

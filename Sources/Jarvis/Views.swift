@@ -153,6 +153,7 @@ struct MenuContentView: View {
                 } label: {
                     Label("Repo", systemImage: "folder")
                 }
+                .disabled(settings.jarvisRepoPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
                 Button {
                     viewModel.openLogsFolder()
@@ -192,7 +193,7 @@ struct MenuContentView: View {
                 }
 
                 Button {
-                    AppWindowPresenter.openSettings()
+                    AppWindowPresenter.openSettings(settings: settings)
                 } label: {
                     Label("Settings", systemImage: "gearshape")
                 }
@@ -250,7 +251,7 @@ struct SetupGuideView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 10) {
                     Button {
-                        AppWindowPresenter.openSettings()
+                        AppWindowPresenter.openSettings(settings: settings)
                     } label: {
                         Label("Settings", systemImage: "gearshape")
                     }
@@ -261,7 +262,8 @@ struct SetupGuideView: View {
                     } label: {
                         Label("Install Services", systemImage: "square.and.arrow.down")
                     }
-                    .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
+                    .disabled(settings.installedRoles.isEmpty || viewModel.isBusy || viewModel.selectedServicesAreLoaded)
+                    .help(viewModel.selectedServicesAreLoaded ? "Selected services are already installed. Use Clean Uninstall before reinstalling." : "Install selected launchd services")
 
                     Button {
                         openWindow(id: "command-progress")
@@ -275,6 +277,14 @@ struct SetupGuideView: View {
                 }
 
                 HStack(spacing: 10) {
+                    Button(role: .destructive) {
+                        openWindow(id: "command-progress")
+                        Task { await viewModel.cleanUninstallLocalState() }
+                    } label: {
+                        Label("Clean Uninstall", systemImage: "trash")
+                    }
+                    .disabled(viewModel.isBusy)
+
                     Button {
                         openWindow(id: "command-progress")
                         Task { await viewModel.collectBringupEvidence() }

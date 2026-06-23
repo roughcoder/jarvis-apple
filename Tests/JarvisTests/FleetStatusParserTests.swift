@@ -28,6 +28,7 @@ final class FleetStatusParserTests: XCTestCase {
         XCTAssertEqual(status.deviceID, "macbook")
         XCTAssertEqual(status.overall, .green)
         XCTAssertEqual(status.roles.first { $0.role == .brain }?.level, .green)
+        XCTAssertEqual(status.roles.first { $0.role == .brain }?.loaded, true)
         XCTAssertEqual(status.roles.first { $0.role == .worker }?.level, .green)
         XCTAssertEqual(status.worker.runningJobs, 2)
         XCTAssertEqual(status.pairing.capabilityCount, 2)
