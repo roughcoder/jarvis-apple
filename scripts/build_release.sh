@@ -7,8 +7,12 @@ Usage: scripts/build_release.sh <version>
 
 Builds a local macOS .app bundle and release zip under dist/.
 
+Environment:
+  JARVIS_APP_FLAVOR=release|dev      Build the public app or a local dev app.
+
 Example:
   scripts/build_release.sh 0.1.0
+  JARVIS_APP_FLAVOR=dev scripts/build_release.sh 0.1.0-dev
 USAGE
 }
 
@@ -26,10 +30,25 @@ fi
 VERSION="${VERSION#v}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
-APP_NAME="Jarvis"
 EXECUTABLE_NAME="Jarvis"
+APP_FLAVOR="${JARVIS_APP_FLAVOR:-release}"
+case "$APP_FLAVOR" in
+  release)
+    APP_NAME="Jarvis"
+    BUNDLE_IDENTIFIER="dev.infinitestack.jarvis.mac"
+    ASSET_NAME="Jarvis-macos.zip"
+    ;;
+  dev)
+    APP_NAME="Jarvis Dev"
+    BUNDLE_IDENTIFIER="dev.infinitestack.jarvis.mac.dev"
+    ASSET_NAME="Jarvis-dev-macos.zip"
+    ;;
+  *)
+    echo "Unsupported JARVIS_APP_FLAVOR: $APP_FLAVOR" >&2
+    exit 2
+    ;;
+esac
 APP_DIR="$DIST_DIR/$APP_NAME.app"
-ASSET_NAME="Jarvis-macos.zip"
 ZIP_PATH="$DIST_DIR/$ASSET_NAME"
 BUILD_NUMBER="${BUILD_NUMBER:-$(date +%Y%m%d%H%M%S)}"
 
@@ -56,7 +75,7 @@ cat > "$APP_DIR/Contents/Info.plist" <<PLIST
   <key>CFBundleExecutable</key>
   <string>$EXECUTABLE_NAME</string>
   <key>CFBundleIdentifier</key>
-  <string>dev.infinitestack.jarvis.mac</string>
+  <string>$BUNDLE_IDENTIFIER</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>

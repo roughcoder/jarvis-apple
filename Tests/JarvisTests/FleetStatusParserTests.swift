@@ -89,4 +89,74 @@ final class FleetStatusParserTests: XCTestCase {
         XCTAssertEqual(status.docker.detail, "No local Docker compose project found.")
         XCTAssertEqual(status.overall, .green)
     }
+
+    func testFreshHomebrewInstallHealthIsNonBlocking() throws {
+        let json = """
+        {
+          "version": "0.1.21",
+          "device_id": "local-mac",
+          "brain": {
+            "auth_configured": false,
+            "bind": "localhost:8700",
+            "devices": []
+          },
+          "docker": {
+            "available": false,
+            "configured": false,
+            "detail": "No local Docker compose project found.",
+            "services": [],
+            "status": "not_configured"
+          },
+          "git": { "available": false },
+          "intercom": {
+            "brain_url": "ws://localhost:8700",
+            "device_id": "local-mac",
+            "pairing": {
+              "capabilities": [],
+              "identity": "house",
+              "paired": true,
+              "reachable": true,
+              "scope": "house"
+            }
+          },
+          "services": {
+            "brain": { "available": true, "label": "com.jarvis.brain", "loaded": true, "pid": 76189, "state": "active" },
+            "intercom": { "available": true, "label": "com.jarvis.intercom", "loaded": true, "pid": 76201, "state": "active" },
+            "worker": { "available": true, "label": "com.jarvis.worker", "loaded": true, "pid": 76209, "state": "active" }
+          },
+          "worker": {
+            "agent": "codex",
+            "base_url": "http://localhost:8780",
+            "probe": {
+              "health": {
+                "agent": "codex",
+                "browser_enabled": true,
+                "gui_provider_configured": false,
+                "ok": true,
+                "repo_root_configured": false,
+                "workspace": "jarvis-workspace/worker"
+              },
+              "jobs": {
+                "recent": [],
+                "running": 0,
+                "total": 0
+              },
+              "reachable": true
+            },
+            "workspace": "jarvis-workspace/worker"
+          }
+        }
+        """
+
+        let status = try FleetStatusParser.parse(data: Data(json.utf8))
+
+        XCTAssertEqual(status.roles.first { $0.role == .brain }?.level, .green)
+        XCTAssertEqual(status.roles.first { $0.role == .intercom }?.level, .green)
+        XCTAssertEqual(status.roles.first { $0.role == .worker }?.level, .green)
+        XCTAssertEqual(status.docker.level, .green)
+        XCTAssertEqual(status.git.level, .green)
+        XCTAssertEqual(status.git.branch, "Homebrew")
+        XCTAssertEqual(status.git.revision, "installed")
+        XCTAssertEqual(status.overall, .green)
+    }
 }

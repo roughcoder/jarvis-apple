@@ -95,6 +95,15 @@ This creates:
 - `dist/Jarvis-macos.zip`
 - `dist/Jarvis-macos.zip.sha256`
 
+Build a local development app with a separate display name and bundle id:
+
+```bash
+JARVIS_APP_FLAVOR=dev scripts/build_release.sh 0.1.0-dev
+```
+
+This creates `dist/Jarvis Dev.app`, so macOS does not confuse it with the
+installed `/Applications/Jarvis.app`.
+
 Preferred release path: run the `Release` workflow in GitHub Actions with:
 
 - `version`: the release version, for example `0.2.7`

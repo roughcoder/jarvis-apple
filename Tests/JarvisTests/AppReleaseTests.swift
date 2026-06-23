@@ -22,4 +22,13 @@ final class AppReleaseTests: XCTestCase {
             "roughcoder/jarvis-apple"
         )
     }
+
+    func testBuildReleaseSupportsSeparateDevBundleIdentity() throws {
+        let script = try String(contentsOfFile: "scripts/build_release.sh", encoding: .utf8)
+
+        XCTAssertTrue(script.contains("JARVIS_APP_FLAVOR=release|dev"))
+        XCTAssertTrue(script.contains("APP_NAME=\"Jarvis Dev\""))
+        XCTAssertTrue(script.contains("BUNDLE_IDENTIFIER=\"dev.infinitestack.jarvis.mac.dev\""))
+        XCTAssertTrue(script.contains("ASSET_NAME=\"Jarvis-dev-macos.zip\""))
+    }
 }

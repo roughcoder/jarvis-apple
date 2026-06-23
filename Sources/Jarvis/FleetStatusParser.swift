@@ -39,6 +39,12 @@ enum FleetStatusParser {
 
     private static func roleStatus(for role: JarvisRole, root: JSONDictionary) -> RoleStatus {
         let roleNode = root.dictionary(role.rawValue) ?? [:]
+        let roleProbeNode = roleNode.dictionary("probe") ?? [:]
+        let roleHealthNode = roleProbeNode.dictionary("health") ?? [:]
+        let pairingNode = root.dictionary("pairing")
+            ?? root.dictionary("intercom")?.dictionary("pairing")
+            ?? root.dictionary("brain")?.dictionary("pairing")
+            ?? [:]
         let servicesNode = root.dictionary("services") ?? [:]
         let serviceNode = servicesNode.dictionary(role.rawValue)
             ?? servicesNode.dictionary(role.launchdLabel)
@@ -52,7 +58,7 @@ enum FleetStatusParser {
             "service_loaded"
         ])
 
-        let reachable = firstBool(nodes: [roleNode, serviceNode], keys: [
+        let reachable = firstBool(nodes: [roleNode, roleProbeNode, roleHealthNode, serviceNode], keys: [
             "reachable",
             "health_reachable",
             "healthy",
@@ -60,30 +66,23 @@ enum FleetStatusParser {
             "responding"
         ])
 
-        let paired = firstBool(nodes: [roleNode, serviceNode], keys: [
+        let paired = firstBool(nodes: [roleNode, pairingNode, serviceNode], keys: [
             "paired",
             "pairing_reachable",
             "brain_reachable",
             "intercom_pairing_reachable"
         ])
 
-        let authConfigured = firstBool(nodes: [roleNode, serviceNode], keys: [
-            "auth_configured",
-            "authentication_configured",
-            "has_auth",
-            "configured"
-        ])
-
-        let jobErrors = firstBool(nodes: [roleNode], keys: ["jobs_errored", "has_failed_jobs", "recent_errors"])
-        let guiConfigured = firstBool(nodes: [roleNode], keys: ["gui_configured", "browser_configured"])
-        let explicit = explicitStatusLevel(from: [roleNode, serviceNode])
+        let jobErrors = firstBool(nodes: [roleNode, roleProbeNode, roleHealthNode], keys: ["jobs_errored", "has_failed_jobs", "recent_errors"])
+        let guiConfigured = firstBool(nodes: [roleNode, roleProbeNode, roleHealthNode], keys: ["gui_configured", "browser_configured"])
+        let explicit = explicitStatusLevel(from: [roleNode, roleProbeNode, roleHealthNode, serviceNode])
 
         let level: StatusLevel
         switch role {
         case .brain:
             if loaded == false || reachable == false {
                 level = .red
-            } else if loaded == true && (paired == true || reachable == true) && authConfigured != false {
+            } else if loaded == true && (paired == true || reachable == true || explicit == .green) {
                 level = .green
             } else if loaded == true {
                 level = .amber
@@ -155,6 +154,17 @@ enum FleetStatusParser {
     private static func gitStatus(root: JSONDictionary) -> GitStatus {
         guard let node = root.dictionary("git") else {
             return GitStatus(level: .unknown, branch: "unknown", revision: "unknown", dirty: nil, detail: "Git status is missing from fleet-status.")
+        }
+
+        let available = firstBool(nodes: [node], keys: ["available"])
+        if available == false {
+            return GitStatus(
+                level: .green,
+                branch: "Homebrew",
+                revision: "installed",
+                dirty: false,
+                detail: "Installed runtime; no source checkout."
+            )
         }
 
         let dirty = firstBool(nodes: [node], keys: ["dirty", "has_changes", "working_tree_dirty"])
@@ -278,7 +288,7 @@ enum FleetStatusParser {
             return nil
         }
 
-        if ["ok", "healthy", "green", "running", "clean", "ready", "reachable", "paired"].contains(status) {
+        if ["ok", "healthy", "green", "running", "active", "clean", "ready", "reachable", "paired"].contains(status) {
             return .green
         }
         if ["degraded", "warning", "warn", "amber", "dirty", "partial", "unpaired", "unconfigured"].contains(status) {

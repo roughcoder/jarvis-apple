@@ -53,9 +53,7 @@ final class JarvisViewModel: ObservableObject {
     }
 
     var selectedServicesAreHealthy: Bool {
-        !settings.installedRoles.isEmpty && settings.installedRoles.allSatisfy { role in
-            fleetStatus.roles.first { $0.role == role }?.level == .green
-        }
+        selectedRolesHealthy(in: fleetStatus)
     }
 
     var appReleaseActionTitle: String {
@@ -241,7 +239,7 @@ final class JarvisViewModel: ObservableObject {
             for role in JarvisRole.allCases where settings.installedRoles.contains(role) {
                 activeOperation = "Stopping existing \(role.title)"
                 let stop = try await client.launchd(.stop, role: role)
-                append(stop, label: "launchctl bootout \(role.title)")
+                appendBootout(stop, role: role)
                 if !stop.succeeded && !isMissingLaunchdService(stop.combinedOutput) {
                     try requireSuccess(stop)
                 }
@@ -259,8 +257,8 @@ final class JarvisViewModel: ObservableObject {
                 }
             }
 
-            activeOperation = "Refreshing status"
-            let refreshed = try await client.fleetStatus(includeDocker: true)
+            activeOperation = "Waiting for services"
+            let refreshed = try await fleetStatusWaitingForSelectedServices(client: client, includeDocker: true)
             fleetStatus = refreshed.status
             append(refreshed.command, label: "fleet-status")
             activeOperation = nil
@@ -282,7 +280,7 @@ final class JarvisViewModel: ObservableObject {
             for role in JarvisRole.allCases {
                 activeOperation = "Stopping \(role.title)"
                 let stop = try await client.launchd(.stop, role: role)
-                append(stop, label: "launchctl bootout \(role.title)")
+                appendBootout(stop, role: role)
                 if !stop.succeeded && !isMissingLaunchdService(stop.combinedOutput) {
                     append("Ignoring stop result for \(role.title): \(stop.combinedOutput)")
                 }
@@ -752,10 +750,46 @@ final class JarvisViewModel: ObservableObject {
         }
     }
 
+    private func fleetStatusWaitingForSelectedServices(
+        client: JarvisClient,
+        includeDocker: Bool,
+        maxAttempts: Int = 40
+    ) async throws -> FleetStatusResponse {
+        var latest: FleetStatusResponse?
+        for attempt in 1...maxAttempts {
+            let response = try await client.fleetStatus(includeDocker: includeDocker)
+            latest = response
+            if selectedRolesHealthy(in: response.status) || attempt == maxAttempts {
+                return response
+            }
+            try await Task.sleep(nanoseconds: 750_000_000)
+        }
+        return latest!
+    }
+
+    private func selectedRolesHealthy(in status: FleetStatus) -> Bool {
+        !settings.installedRoles.isEmpty && settings.installedRoles.allSatisfy { role in
+            status.roles.first { $0.role == role }?.level == .green
+        }
+    }
+
     func isMissingLaunchdService(_ output: String) -> Bool {
         output.localizedCaseInsensitiveContains("could not find specified service")
             || output.localizedCaseInsensitiveContains("no such process")
             || output.localizedCaseInsensitiveContains("boot-out failed: 5: input/output error")
+    }
+
+    private func appendBootout(_ result: CommandResult, role: JarvisRole) {
+        if !result.succeeded && isMissingLaunchdService(result.combinedOutput) {
+            append(
+                """
+                $ \(result.commandLine)
+                [launchctl bootout \(role.title)] skipped, service was not loaded
+                """
+            )
+        } else {
+            append(result, label: "launchctl bootout \(role.title)")
+        }
     }
 
     private func append(_ result: CommandResult, label: String) {
