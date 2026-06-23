@@ -274,12 +274,15 @@ struct JarvisClient {
         return arguments
     }
 
-    func bringupSummary(evidencePath: String) async throws -> CommandResult {
-        try await runJarvis(arguments: bringupSummaryArguments(evidencePath: evidencePath), timeout: 30)
+    func bringupSummary(evidencePath: String, outputPath: String = "") async throws -> CommandResult {
+        try await runJarvis(
+            arguments: bringupSummaryArguments(evidencePath: evidencePath, outputPath: outputPath),
+            timeout: 30
+        )
     }
 
-    func bringupSummaryArguments(evidencePath: String) -> [String] {
-        [
+    func bringupSummaryArguments(evidencePath: String, outputPath: String = "") -> [String] {
+        var arguments = [
             "bringup-summary",
             evidencePath.trimmingCharacters(in: .whitespacesAndNewlines),
             "--json",
@@ -288,6 +291,11 @@ struct JarvisClient {
             "--expect-role", "intercom",
             "--min-files", "4"
         ]
+        let trimmedOutputPath = outputPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedOutputPath.isEmpty {
+            arguments.append(contentsOf: ["--output", trimmedOutputPath])
+        }
+        return arguments
     }
 
     func runUV(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {

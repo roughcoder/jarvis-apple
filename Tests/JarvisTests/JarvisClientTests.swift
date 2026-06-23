@@ -164,7 +164,10 @@ final class JarvisClientTests: XCTestCase {
         ))
 
         XCTAssertEqual(
-            client.bringupSummaryArguments(evidencePath: " ~/Desktop/jarvis-bringup-evidence "),
+            client.bringupSummaryArguments(
+                evidencePath: " ~/Desktop/jarvis-bringup-evidence ",
+                outputPath: " ~/Desktop/jarvis-bringup-evidence/jarvis-fleet-summary.json "
+            ),
             [
                 "bringup-summary",
                 "~/Desktop/jarvis-bringup-evidence",
@@ -172,7 +175,8 @@ final class JarvisClientTests: XCTestCase {
                 "--expect-role", "brain",
                 "--expect-role", "worker",
                 "--expect-role", "intercom",
-                "--min-files", "4"
+                "--min-files", "4",
+                "--output", "~/Desktop/jarvis-bringup-evidence/jarvis-fleet-summary.json"
             ]
         )
     }

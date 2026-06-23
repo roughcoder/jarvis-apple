@@ -384,7 +384,7 @@ final class JarvisViewModel: ObservableObject {
 
         do {
             let result = try await JarvisClient(configuration: settings.configuration)
-                .bringupSummary(evidencePath: evidenceOutputDirectory)
+                .bringupSummary(evidencePath: evidenceOutputDirectory, outputPath: evidenceSummaryOutputPath)
             append(result, label: "jarvis bringup-summary")
             try requireSuccess(result)
             activeOperation = nil
@@ -400,6 +400,10 @@ final class JarvisViewModel: ObservableObject {
             return desktopURL.appendingPathComponent("jarvis-bringup-evidence").path
         }
         return "~/Desktop/jarvis-bringup-evidence"
+    }
+
+    private var evidenceSummaryOutputPath: String {
+        "\(evidenceOutputDirectory)/jarvis-fleet-summary.json"
     }
 
     func copyLatestPairingEntry() {
