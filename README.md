@@ -198,7 +198,7 @@ The Homebrew tap can hold multiple Infinite Stack tools. The normal public Mac
 path is the runtime bootstrap:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/roughcoder/jarvis/main/scripts/install_mac.sh | bash
+curl -fsSL https://raw.githubusercontent.com/roughcoder/jarvis/v0.1.19/scripts/install_mac.sh | bash
 ```
 
 Manual Homebrew equivalent:
