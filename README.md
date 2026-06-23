@@ -57,8 +57,9 @@ Open Settings from the menu bar item and configure as needed:
   CLI, checks brain reachability for the configured private-network host,
   checks worker GUI readiness with `jarvis worker --doctor`, issues per-device
   pairing entries, saves redacted `jarvis bringup --json` evidence under
-  `~/Desktop/jarvis-bringup-evidence`, and can copy Mac pairing config or
-  Raspberry Pi installer commands when a brain host is configured.
+  `~/Desktop/jarvis-bringup-evidence`, summarizes that folder with
+  `jarvis bringup-summary`, and can copy Mac pairing config or Raspberry Pi
+  installer commands when a brain host is configured.
 - Packaged installs pass `--workdir ~/.jarvis` during service installation so
   launchd services load local configuration from `~/.jarvis/.env`.
 - Fresh installs open the Setup window automatically the first time the app

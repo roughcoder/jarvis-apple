@@ -247,38 +247,52 @@ struct SetupGuideView: View {
 
             Divider()
 
-            HStack(spacing: 10) {
-                Button {
-                    AppWindowPresenter.openSettings()
-                } label: {
-                    Label("Settings", systemImage: "gearshape")
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 10) {
+                    Button {
+                        AppWindowPresenter.openSettings()
+                    } label: {
+                        Label("Settings", systemImage: "gearshape")
+                    }
+
+                    Button {
+                        openWindow(id: "command-progress")
+                        Task { await viewModel.installSelectedServices() }
+                    } label: {
+                        Label("Install Services", systemImage: "square.and.arrow.down")
+                    }
+                    .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
+
+                    Button {
+                        openWindow(id: "command-progress")
+                        Task { await viewModel.updateInstalledRoles() }
+                    } label: {
+                        Label("Update Runtime", systemImage: "arrow.down.circle")
+                    }
+                    .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
+
+                    Spacer()
                 }
 
-                Button {
-                    openWindow(id: "command-progress")
-                    Task { await viewModel.installSelectedServices() }
-                } label: {
-                    Label("Install Services", systemImage: "square.and.arrow.down")
-                }
-                .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
+                HStack(spacing: 10) {
+                    Button {
+                        openWindow(id: "command-progress")
+                        Task { await viewModel.collectBringupEvidence() }
+                    } label: {
+                        Label("Collect Evidence", systemImage: "checklist")
+                    }
+                    .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
 
-                Button {
-                    openWindow(id: "command-progress")
-                    Task { await viewModel.updateInstalledRoles() }
-                } label: {
-                    Label("Update Runtime", systemImage: "arrow.down.circle")
-                }
-                .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
+                    Button {
+                        openWindow(id: "command-progress")
+                        Task { await viewModel.summarizeBringupEvidence() }
+                    } label: {
+                        Label("Summarize Evidence", systemImage: "checkmark.seal")
+                    }
+                    .disabled(viewModel.isBusy)
 
-                Button {
-                    openWindow(id: "command-progress")
-                    Task { await viewModel.collectBringupEvidence() }
-                } label: {
-                    Label("Collect Evidence", systemImage: "checklist")
+                    Spacer()
                 }
-                .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
-
-                Spacer()
             }
             .buttonStyle(.bordered)
         }

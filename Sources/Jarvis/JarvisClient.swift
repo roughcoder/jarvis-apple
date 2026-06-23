@@ -274,6 +274,22 @@ struct JarvisClient {
         return arguments
     }
 
+    func bringupSummary(evidencePath: String) async throws -> CommandResult {
+        try await runJarvis(arguments: bringupSummaryArguments(evidencePath: evidencePath), timeout: 30)
+    }
+
+    func bringupSummaryArguments(evidencePath: String) -> [String] {
+        [
+            "bringup-summary",
+            evidencePath.trimmingCharacters(in: .whitespacesAndNewlines),
+            "--json",
+            "--expect-role", "brain",
+            "--expect-role", "worker",
+            "--expect-role", "intercom",
+            "--min-files", "4"
+        ]
+    }
+
     func runUV(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {
         try await runner.run(
             executable: configuration.uvPath,

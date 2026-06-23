@@ -377,6 +377,24 @@ final class JarvisViewModel: ObservableObject {
         }
     }
 
+    func summarizeBringupEvidence() async {
+        activeOperation = "Summarizing bring-up evidence"
+        lastError = nil
+        lastCommandOutput = ""
+
+        do {
+            let result = try await JarvisClient(configuration: settings.configuration)
+                .bringupSummary(evidencePath: evidenceOutputDirectory)
+            append(result, label: "jarvis bringup-summary")
+            try requireSuccess(result)
+            activeOperation = nil
+        } catch {
+            activeOperation = nil
+            lastError = readableError(error)
+            append("ERROR: \(readableError(error))")
+        }
+    }
+
     private var evidenceOutputDirectory: String {
         if let desktopURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first {
             return desktopURL.appendingPathComponent("jarvis-bringup-evidence").path
