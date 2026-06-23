@@ -202,6 +202,7 @@ final class JarvisClientTests: XCTestCase {
                 "--expect-role", "brain",
                 "--expect-role", "worker",
                 "--expect-role", "intercom",
+                "--expect-current-release",
                 "--min-files", "4",
                 "--output", "~/Desktop/jarvis-bringup-evidence/jarvis-fleet-summary.json"
             ]

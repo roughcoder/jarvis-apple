@@ -321,6 +321,7 @@ struct JarvisClient {
             "--expect-role", "brain",
             "--expect-role", "worker",
             "--expect-role", "intercom",
+            "--expect-current-release",
             "--min-files", "4"
         ]
         let trimmedOutputPath = outputPath.trimmingCharacters(in: .whitespacesAndNewlines)
