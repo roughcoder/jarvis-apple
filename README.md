@@ -143,13 +143,7 @@ Prerequisites:
 Initial install:
 
 ```bash
-brew tap roughcoder/infinite-stack
-brew trust --formula roughcoder/infinite-stack/jarvis
-brew trust --cask roughcoder/infinite-stack/jarvis-app
-brew install jarvis
-brew install --cask jarvis-app
-/usr/bin/xattr -dr com.apple.quarantine /Applications/Jarvis.app
-open -a Jarvis
+curl -fsSL https://raw.githubusercontent.com/roughcoder/jarvis/main/scripts/install_mac.sh | bash
 ```
 
 Clean reset for fresh install testing:
@@ -191,15 +185,15 @@ If installation fails, the detached helper writes a temporary `install.log` unde
 ## Homebrew Direction
 
 The Homebrew tap can hold multiple Infinite Stack tools. The normal public Mac
-path is Homebrew:
+path is the Jarvis installer, which uses Homebrew internally:
 
 ```bash
-brew tap roughcoder/infinite-stack
-brew trust --formula roughcoder/infinite-stack/jarvis
-brew trust --cask roughcoder/infinite-stack/jarvis-app
-brew install jarvis
-brew install --cask jarvis-app
-xattr -dr com.apple.quarantine /Applications/Jarvis.app
+curl -fsSL https://raw.githubusercontent.com/roughcoder/jarvis/main/scripts/install_mac.sh | bash
+```
+
+Homebrew still owns updates:
+
+```bash
 brew update
 brew trust --formula roughcoder/infinite-stack/jarvis
 brew trust --cask roughcoder/infinite-stack/jarvis-app
