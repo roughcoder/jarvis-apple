@@ -752,9 +752,10 @@ final class JarvisViewModel: ObservableObject {
         }
     }
 
-    private func isMissingLaunchdService(_ output: String) -> Bool {
+    func isMissingLaunchdService(_ output: String) -> Bool {
         output.localizedCaseInsensitiveContains("could not find specified service")
             || output.localizedCaseInsensitiveContains("no such process")
+            || output.localizedCaseInsensitiveContains("boot-out failed: 5: input/output error")
     }
 
     private func append(_ result: CommandResult, label: String) {

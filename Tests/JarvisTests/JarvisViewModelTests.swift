@@ -45,6 +45,21 @@ final class JarvisViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.selectedServicesAreHealthy)
     }
 
+    @MainActor
+    func testMissingLaunchdServiceAcceptsBootoutInputOutputError() {
+        let (settings, defaults) = makeSettings()
+        defer { defaults.removePersistentDomain(forName: defaultsSuiteName(defaults)) }
+        let viewModel = JarvisViewModel(settings: settings)
+
+        XCTAssertTrue(viewModel.isMissingLaunchdService("""
+        Boot-out failed: 5: Input/output error
+        Try re-running the command as root for richer errors.
+        """))
+        XCTAssertTrue(viewModel.isMissingLaunchdService("Could not find specified service"))
+        XCTAssertTrue(viewModel.isMissingLaunchdService("No such process"))
+        XCTAssertFalse(viewModel.isMissingLaunchdService("Operation not permitted"))
+    }
+
     private func role(_ role: JarvisRole, _ level: StatusLevel) -> RoleStatus {
         RoleStatus(role: role, level: level, headline: level.title, detail: level.title, loaded: level == .green)
     }
