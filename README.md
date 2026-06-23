@@ -56,8 +56,9 @@ Open Settings from the menu bar item and configure as needed:
 - The Setup window installs selected local Jarvis services through the runtime
   CLI, checks brain reachability for the configured private-network host,
   checks worker GUI readiness with `jarvis worker --doctor`, issues per-device
-  pairing entries, writes those entries into `~/.jarvis/.env` when this Mac is
-  a selected brain, saves redacted `jarvis bringup --json` evidence under
+  pairing entries, writes `BRAIN_HOST=0.0.0.0` and those entries into
+  `~/.jarvis/.env` when this Mac is a selected brain, saves redacted
+  `jarvis bringup --json` evidence under
   `~/Desktop/jarvis-bringup-evidence`, writes
   `~/Desktop/jarvis-bringup-evidence/jarvis-fleet-summary.json` with
   `jarvis bringup-summary`, opens that evidence folder, and can copy Mac

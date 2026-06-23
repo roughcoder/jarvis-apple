@@ -74,12 +74,14 @@ final class JarvisClientTests: XCTestCase {
                 deviceID: "room-pi",
                 brainHost: " imac.private ",
                 applyBrainConfig: true,
+                brainBindHost: " 0.0.0.0 ",
                 envFile: " ~/.jarvis/.env "
             ),
             [
                 "pair", "room-pi", "--json",
                 "--apply-brain-config",
                 "--env-file", "~/.jarvis/.env",
+                "--brain-bind-host", "0.0.0.0",
                 "--mac-config",
                 "--pi-installer",
                 "--brain-host", "imac.private"

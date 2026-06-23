@@ -188,6 +188,7 @@ struct JarvisClient {
         identity: String = "",
         brainHost: String = "",
         applyBrainConfig: Bool = false,
+        brainBindHost: String = "",
         envFile: String = ""
     ) async throws -> PairingIssue {
         let arguments = pairingArguments(
@@ -195,6 +196,7 @@ struct JarvisClient {
             identity: identity,
             brainHost: brainHost,
             applyBrainConfig: applyBrainConfig,
+            brainBindHost: brainBindHost,
             envFile: envFile
         )
         let result = try await runJarvis(arguments: arguments, timeout: 15)
@@ -217,6 +219,7 @@ struct JarvisClient {
         identity: String = "",
         brainHost: String = "",
         applyBrainConfig: Bool = false,
+        brainBindHost: String = "",
         envFile: String = ""
     ) -> [String] {
         var arguments = ["pair", deviceID, "--json"]
@@ -229,6 +232,10 @@ struct JarvisClient {
             let trimmedEnvFile = envFile.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmedEnvFile.isEmpty {
                 arguments.append(contentsOf: ["--env-file", trimmedEnvFile])
+            }
+            let trimmedBrainBindHost = brainBindHost.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedBrainBindHost.isEmpty {
+                arguments.append(contentsOf: ["--brain-bind-host", trimmedBrainBindHost])
             }
         }
         let trimmedBrainHost = brainHost.trimmingCharacters(in: .whitespacesAndNewlines)

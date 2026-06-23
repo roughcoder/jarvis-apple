@@ -19,6 +19,7 @@ final class JarvisViewModel: ObservableObject {
     @Published var latestPairingIssue: PairingIssue?
 
     private let settings: AppSettings
+    private let brainConfigBindHost = "0.0.0.0"
     private var pollIteration = 0
     private var didCheckAppRelease = false
 
@@ -266,12 +267,14 @@ final class JarvisViewModel: ObservableObject {
         latestPairingIssue = nil
 
         do {
+            let shouldApplyBrainConfig = settings.installedRoles.contains(.brain)
             let issue = try await JarvisClient(configuration: settings.configuration)
                 .issuePairing(
                     deviceID: deviceID,
                     identity: pairingIdentity,
                     brainHost: settings.pairingBrainHost,
-                    applyBrainConfig: settings.installedRoles.contains(.brain),
+                    applyBrainConfig: shouldApplyBrainConfig,
+                    brainBindHost: shouldApplyBrainConfig ? brainConfigBindHost : "",
                     envFile: brainConfigEnvFile
                 )
             latestPairingIssue = issue
