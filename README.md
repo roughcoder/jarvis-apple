@@ -104,9 +104,14 @@ JARVIS_APP_FLAVOR=dev scripts/build_release.sh 0.1.0-dev
 This creates `dist/Jarvis Dev.app`, so macOS does not confuse it with the
 installed `/Applications/Jarvis.app`.
 
-Preferred release path: run the `Release` workflow in GitHub Actions with:
+Preferred release path: run the `Release` workflow in GitHub Actions.
+The version is computed automatically from commit history using Conventional
+Commits:
 
-- `version`: the release version, for example `0.2.7`
+- `feat(...)` increments minor
+- `fix(...)`, `chore(...)`, `docs(...)`, `style(...)`, `refactor(...)`,
+  `test(...)`, `perf(...)`, `build(...)`, `ci(...)`, `revert(...)` increment patch
+- `!` in the subject or `BREAKING CHANGE:` in the body increments major
 - `draft`: whether the GitHub release should remain draft
 - `skip_homebrew`: whether to skip the tap update
 
@@ -135,6 +140,22 @@ If you need to publish a GitHub Release without touching Homebrew:
 ```bash
 scripts/release_github.sh 0.1.0 --skip-homebrew
 ```
+
+## Conventional Commits (local)
+
+Install the local commit hook once:
+
+```bash
+scripts/install_commit_hook.sh
+```
+
+Commits must be in Conventional Commit format, for example:
+
+```text
+feat: add new launch service state display
+```
+
+This is enforced in CI and by the local commit hook.
 
 Once installed as `Jarvis.app`, the menu can update itself from the App
 Release section. It downloads the latest release zip, starts a detached installer

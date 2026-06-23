@@ -3,10 +3,6 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Release version, with or without v prefix"
-        required: true
-        type: string
       draft:
         description: "Create the GitHub release as a draft"
         required: true
@@ -23,6 +19,8 @@ permissions:
 
 jobs:
   release:
+    outputs:
+      release-version: ${{ steps.compute-version.outputs.release_version }}
     runs-on: macos-14
     env:
       GH_TOKEN: ${{ github.token }}
@@ -32,20 +30,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate version
+      - name: Compute next version
+        id: compute-version
         run: |
           set -euo pipefail
-          version="${{ inputs.version }}"
-          version="${version#v}"
-          if [[ ! "$version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
-            echo "Version must look like 1.2.3, optionally prefixed with v." >&2
-            exit 2
-          fi
+          version="$(scripts/compute_next_release_version.sh)"
+          echo "release_version=${version}" >> "$GITHUB_OUTPUT"
+          echo "Computed release version: ${version}"
 
       - name: Build and publish GitHub release
         run: |
           set -euo pipefail
-          args=("${{ inputs.version }}" "--skip-homebrew")
+          args=("${{ steps.compute-version.outputs.release_version }}" "--skip-homebrew")
           if [[ "${{ inputs.draft }}" == "true" ]]; then
             args+=("--draft")
           fi
@@ -54,7 +50,7 @@ jobs:
       - name: Upload release artifacts to workflow run
         uses: actions/upload-artifact@v4
         with:
-          name: jarvis-macos-${{ inputs.version }}
+          name: jarvis-macos-${{ steps.compute-version.outputs.release_version }}
           path: |
             dist/Jarvis-macos.zip
             dist/Jarvis-macos.zip.sha256
@@ -95,5 +91,4 @@ jobs:
 
       - name: Update Homebrew cask
         working-directory: jarvis-apple
-        run: scripts/update_homebrew_cask.sh "${{ inputs.version }}" "${{ github.repository }}"
-
+        run: scripts/update_homebrew_cask.sh "${{ needs.release.outputs.release-version }}" "${{ github.repository }}"
