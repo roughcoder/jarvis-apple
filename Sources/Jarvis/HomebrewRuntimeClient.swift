@@ -34,6 +34,15 @@ struct HomebrewRuntimeClient {
             return []
         }
 
+        var results: [CommandResult] = []
+        if let trust = try await trustResult(
+            brewPath: brewPath,
+            flag: "--formula",
+            target: "\(AppIdentity.homebrewTap)/\(token)"
+        ) {
+            results.append(trust)
+        }
+
         let update = try await runner.run(
             executable: brewPath,
             arguments: ["update"],
@@ -44,7 +53,25 @@ struct HomebrewRuntimeClient {
             arguments: ["upgrade", token],
             timeout: 300
         )
-        return [update, upgrade]
+        results.append(contentsOf: [update, upgrade])
+        return results
+    }
+
+    private func trustResult(brewPath: String, flag: String, target: String) async throws -> CommandResult? {
+        let help = try await runner.run(
+            executable: brewPath,
+            arguments: ["help", "trust"],
+            timeout: 10
+        )
+        guard help.succeeded else {
+            return nil
+        }
+
+        return try await runner.run(
+            executable: brewPath,
+            arguments: ["trust", flag, target],
+            timeout: 20
+        )
     }
 
     static func version(from output: String, token: String) -> String? {

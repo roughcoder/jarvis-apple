@@ -3,6 +3,7 @@ import XCTest
 
 final class HomebrewAppUpdaterTests: XCTestCase {
     func testHelperScriptRunsBrewUpgradeAndReopensApp() {
+        XCTAssertTrue(HomebrewAppUpdater.helperScript.contains(#""$BREW_PATH" trust --cask "$TAP_NAME/$CASK_TOKEN""#))
         XCTAssertTrue(HomebrewAppUpdater.helperScript.contains(#""$BREW_PATH" update"#))
         XCTAssertTrue(HomebrewAppUpdater.helperScript.contains(#""$BREW_PATH" upgrade --cask "$CASK_TOKEN""#))
         XCTAssertTrue(HomebrewAppUpdater.helperScript.contains(#"/usr/bin/xattr -dr com.apple.quarantine "$TARGET_APP""#))

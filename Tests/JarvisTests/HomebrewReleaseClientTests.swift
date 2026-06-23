@@ -50,4 +50,11 @@ final class HomebrewReleaseClientTests: XCTestCase {
         XCTAssertTrue(HomebrewReleaseClient.outputRequiresTrust("Refusing to load cask from untrusted tap. Run `brew trust roughcoder/infinite-stack`."))
         XCTAssertFalse(HomebrewReleaseClient.outputRequiresTrust("jarvis-app 0.2.2"))
     }
+
+    func testTapTrustErrorUsesSpecificCaskTrust() {
+        XCTAssertEqual(
+            HomebrewReleaseClientError.tapNotTrusted.localizedDescription,
+            "Homebrew tap entry is not trusted. Run `brew trust --cask roughcoder/infinite-stack/jarvis-app`, then check again."
+        )
+    }
 }

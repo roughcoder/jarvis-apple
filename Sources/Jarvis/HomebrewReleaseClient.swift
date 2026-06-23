@@ -13,7 +13,7 @@ enum HomebrewReleaseClientError: LocalizedError {
         case .invalidOutput(let output):
             return "Could not parse Homebrew output: \(output)"
         case .tapNotTrusted:
-            return "Homebrew tap is not trusted. Run `brew trust --tap \(AppIdentity.homebrewTap)`, then check again."
+            return "Homebrew tap entry is not trusted. Run `brew trust --cask \(AppIdentity.homebrewTap)/\(AppIdentity.homebrewCaskToken)`, then check again."
         }
     }
 }

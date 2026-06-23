@@ -83,6 +83,11 @@ struct HomebrewAppUpdater {
 
     echo "Preparing Homebrew update for $CASK_TOKEN"
 
+    if "$BREW_PATH" help trust >/dev/null 2>&1; then
+      echo "Trusting $TAP_NAME/$CASK_TOKEN"
+      "$BREW_PATH" trust --cask "$TAP_NAME/$CASK_TOKEN" || true
+    fi
+
     echo "Updating Homebrew metadata"
     "$BREW_PATH" update
 
