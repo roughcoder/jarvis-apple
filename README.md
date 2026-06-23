@@ -105,15 +105,21 @@ This creates `dist/Jarvis Dev.app`, so macOS does not confuse it with the
 installed `/Applications/Jarvis.app`.
 
 Preferred release path: run the `Release` workflow in GitHub Actions.
-The version is computed automatically from commit history using Conventional
-Commits:
+The release version is computed automatically from commit history using Conventional
+Commits, starting from the latest `vX.Y.Z` tag. For this repo, that baseline is
+currently `v0.2.30`.
+
+Workflow inputs are now limited to:
+
+- `draft`: whether the GitHub release should remain draft
+- `skip_homebrew`: whether to skip the tap update
+
+Versioning rules:
 
 - `feat(...)` increments minor
 - `fix(...)`, `chore(...)`, `docs(...)`, `style(...)`, `refactor(...)`,
   `test(...)`, `perf(...)`, `build(...)`, `ci(...)`, `revert(...)` increment patch
 - `!` in the subject or `BREAKING CHANGE:` in the body increments major
-- `draft`: whether the GitHub release should remain draft
-- `skip_homebrew`: whether to skip the tap update
 
 The workflow builds `Jarvis-macos.zip`, publishes the GitHub Release, uploads
 the release artifacts to the workflow run, and updates
@@ -156,6 +162,12 @@ feat: add new launch service state display
 ```
 
 This is enforced in CI and by the local commit hook.
+
+Quick local check to verify your branch before release:
+
+```bash
+scripts/check_conventional_commits.sh $(git describe --tags --abbrev=0) HEAD
+```
 
 Once installed as `Jarvis.app`, the menu can update itself from the App
 Release section. It downloads the latest release zip, starts a detached installer
