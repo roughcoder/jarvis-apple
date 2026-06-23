@@ -441,6 +441,10 @@ final class JarvisViewModel: ObservableObject {
         openPath(settings.logsPath)
     }
 
+    func openEvidenceFolder() {
+        openPath(evidenceOutputDirectory)
+    }
+
     func openLog(for role: JarvisRole) {
         openPath("\(settings.logsPath)/\(role.rawValue).err.log")
     }

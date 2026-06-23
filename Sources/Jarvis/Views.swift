@@ -291,6 +291,13 @@ struct SetupGuideView: View {
                     }
                     .disabled(viewModel.isBusy)
 
+                    Button {
+                        viewModel.openEvidenceFolder()
+                    } label: {
+                        Label("Open Evidence Folder", systemImage: "folder")
+                    }
+                    .disabled(viewModel.isBusy)
+
                     Spacer()
                 }
             }
