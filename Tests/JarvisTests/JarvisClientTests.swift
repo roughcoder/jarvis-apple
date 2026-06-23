@@ -27,6 +27,52 @@ final class JarvisClientTests: XCTestCase {
         )
     }
 
+    func testInstalledInvocationCreatesWorkdirBeforeLaunch() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JarvisInstalledWorkdir-\(UUID().uuidString)")
+        let workdir = directory.appendingPathComponent(".jarvis").path
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+        let invocation = JarvisInvocation(
+            executable: "/opt/homebrew/bin/jarvis",
+            arguments: ["fleet-status", "--json"],
+            currentDirectory: workdir,
+            environment: ["JARVIS_ENV_FILE": "\(workdir)/.env"],
+            mode: .installed
+        )
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: workdir))
+        try client.prepareForInvocation(invocation)
+
+        var isDirectory: ObjCBool = false
+        XCTAssertTrue(FileManager.default.fileExists(atPath: workdir, isDirectory: &isDirectory))
+        XCTAssertTrue(isDirectory.boolValue)
+    }
+
+    func testCheckoutInvocationDoesNotCreateWorkdir() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JarvisCheckoutWorkdir-\(UUID().uuidString)")
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+        let invocation = JarvisInvocation(
+            executable: "/bin/echo",
+            arguments: ["run", "jarvis", "fleet-status", "--json"],
+            currentDirectory: directory.path,
+            environment: [:],
+            mode: .checkout
+        )
+
+        try client.prepareForInvocation(invocation)
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.path))
+    }
+
     func testUsesCheckoutWithUVWhenCheckoutMarkersExist() throws {
         let directory = try makeCheckout()
         let client = JarvisClient(configuration: configuration(

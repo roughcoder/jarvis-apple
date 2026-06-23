@@ -344,6 +344,7 @@ struct JarvisClient {
 
     func runJarvis(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {
         let invocation = jarvisInvocation(arguments: arguments)
+        try prepareForInvocation(invocation)
         return try await runner.run(
             executable: invocation.executable,
             arguments: invocation.arguments,
@@ -370,6 +371,20 @@ struct JarvisClient {
             currentDirectory: Self.defaultInstalledWorkdir,
             environment: ["JARVIS_ENV_FILE": "\(Self.defaultInstalledWorkdir)/.env"],
             mode: .installed
+        )
+    }
+
+    func prepareForInvocation(_ invocation: JarvisInvocation) throws {
+        guard invocation.mode == .installed,
+              let currentDirectory = invocation.currentDirectory
+        else {
+            return
+        }
+
+        let expandedDirectory = FilePath.expandingTilde(in: currentDirectory)
+        try FileManager.default.createDirectory(
+            at: URL(fileURLWithPath: expandedDirectory, isDirectory: true),
+            withIntermediateDirectories: true
         )
     }
 
