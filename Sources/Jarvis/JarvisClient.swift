@@ -367,7 +367,7 @@ struct JarvisClient {
         return JarvisInvocation(
             executable: configuration.jarvisPath,
             arguments: arguments,
-            currentDirectory: nil,
+            currentDirectory: Self.defaultInstalledWorkdir,
             environment: ["JARVIS_ENV_FILE": "\(Self.defaultInstalledWorkdir)/.env"],
             mode: .installed
         )

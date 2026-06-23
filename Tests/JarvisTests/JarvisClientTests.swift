@@ -15,7 +15,7 @@ final class JarvisClientTests: XCTestCase {
         XCTAssertEqual(invocation.mode, .installed)
         XCTAssertEqual(invocation.executable, "/opt/homebrew/bin/jarvis")
         XCTAssertEqual(invocation.arguments, ["fleet-status", "--json"])
-        XCTAssertNil(invocation.currentDirectory)
+        XCTAssertEqual(invocation.currentDirectory, JarvisClient.defaultInstalledWorkdir)
         XCTAssertEqual(invocation.environment, ["JARVIS_ENV_FILE": "\(JarvisClient.defaultInstalledWorkdir)/.env"])
         XCTAssertEqual(
             client.serviceInstallArguments(role: .brain),
