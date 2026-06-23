@@ -113,8 +113,8 @@ Local fallback for creating or updating a GitHub Release and Homebrew cask:
 scripts/release_github.sh 0.1.0
 ```
 
-The release uploads the app zip, checksum, and `install_latest.sh` installer
-asset, then updates `roughcoder/homebrew-infinite-stack/Casks/jarvis-app.rb`.
+The release uploads the app zip and checksum, then updates
+`roughcoder/homebrew-infinite-stack/Casks/jarvis-app.rb`.
 Draft releases skip Homebrew:
 
 ```bash
@@ -125,12 +125,6 @@ If you need to publish a GitHub Release without touching Homebrew:
 
 ```bash
 scripts/release_github.sh 0.1.0 --skip-homebrew
-```
-
-Public releases can install the latest app with:
-
-```bash
-curl -fsSL https://github.com/roughcoder/jarvis-apple/releases/latest/download/install_latest.sh | bash
 ```
 
 Once installed as `Jarvis.app`, the menu can update itself from the App
@@ -149,17 +143,13 @@ Prerequisites:
 Initial install:
 
 ```bash
-curl -fsSL https://github.com/roughcoder/jarvis-apple/releases/latest/download/install_latest.sh | bash
-```
-
-The installer uses `/Applications` when it is writable. On managed laptops where
-that path needs admin permission, it automatically installs to `~/Applications`.
-Override the target when needed:
-
-```bash
-curl -fsSL https://github.com/roughcoder/jarvis-apple/releases/latest/download/install_latest.sh \
-  -o /tmp/install_jarvis.sh
-JARVIS_INSTALL_DIR="$HOME/Applications" bash /tmp/install_jarvis.sh
+brew tap roughcoder/infinite-stack
+brew trust --formula roughcoder/infinite-stack/jarvis
+brew trust --cask roughcoder/infinite-stack/jarvis-app
+brew install jarvis
+brew install --cask jarvis-app
+/usr/bin/xattr -dr com.apple.quarantine /Applications/Jarvis.app
+open -a Jarvis
 ```
 
 After the app opens:
@@ -195,13 +185,7 @@ If installation fails, the detached helper writes a temporary `install.log` unde
 ## Homebrew Direction
 
 The Homebrew tap can hold multiple Infinite Stack tools. The normal public Mac
-path is the runtime bootstrap:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/roughcoder/jarvis/v0.1.21/scripts/install_mac.sh | bash
-```
-
-Manual Homebrew equivalent:
+path is Homebrew:
 
 ```bash
 brew tap roughcoder/infinite-stack

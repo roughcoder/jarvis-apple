@@ -98,12 +98,16 @@ Local macOS app for observing Jarvis roles and checking app releases.
 
 ## Install
 
-Download \`$ASSET_NAME\`, unzip it, and move \`$APP_NAME.app\` to \`/Applications\`.
-
-For scripted install, download the \`install_latest.sh\` release asset and run it:
+Install the public runtime and app through Homebrew:
 
 \`\`\`bash
-curl -fsSL https://github.com/roughcoder/jarvis-apple/releases/latest/download/install_latest.sh | bash
+brew tap roughcoder/infinite-stack
+brew trust --formula roughcoder/infinite-stack/jarvis
+brew trust --cask roughcoder/infinite-stack/jarvis-app
+brew install jarvis
+brew install --cask jarvis-app
+/usr/bin/xattr -dr com.apple.quarantine /Applications/Jarvis.app
+open -a Jarvis
 \`\`\`
 NOTES
 
