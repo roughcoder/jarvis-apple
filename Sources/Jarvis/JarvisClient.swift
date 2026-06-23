@@ -242,11 +242,22 @@ struct JarvisClient {
         ["worker", "--doctor"]
     }
 
-    func bringupEvidence(roles: Set<JarvisRole>, brainHost: String = "") async throws -> CommandResult {
-        try await runJarvis(arguments: bringupArguments(roles: roles, brainHost: brainHost), timeout: 45)
+    func bringupEvidence(
+        roles: Set<JarvisRole>,
+        brainHost: String = "",
+        outputPath: String = ""
+    ) async throws -> CommandResult {
+        try await runJarvis(
+            arguments: bringupArguments(roles: roles, brainHost: brainHost, outputPath: outputPath),
+            timeout: 45
+        )
     }
 
-    func bringupArguments(roles: Set<JarvisRole>, brainHost: String = "") -> [String] {
+    func bringupArguments(
+        roles: Set<JarvisRole>,
+        brainHost: String = "",
+        outputPath: String = ""
+    ) -> [String] {
         var arguments = ["bringup", "--json"]
         for role in Self.orderedInstalledRoles(for: roles) {
             arguments.append(contentsOf: ["--role", role.rawValue])
@@ -255,6 +266,10 @@ struct JarvisClient {
         let trimmedBrainHost = brainHost.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedBrainHost.isEmpty {
             arguments.append(contentsOf: ["--brain-host", trimmedBrainHost])
+        }
+        let trimmedOutputPath = outputPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedOutputPath.isEmpty {
+            arguments.append(contentsOf: ["--output", trimmedOutputPath])
         }
         return arguments
     }

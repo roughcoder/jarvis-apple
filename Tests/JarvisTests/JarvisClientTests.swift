@@ -134,6 +134,28 @@ final class JarvisClientTests: XCTestCase {
         )
     }
 
+    func testBringupArgumentsCanSaveEvidenceOutput() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+
+        XCTAssertEqual(
+            client.bringupArguments(
+                roles: [.worker],
+                brainHost: " ",
+                outputPath: " ~/Desktop/jarvis-bringup-evidence "
+            ),
+            [
+                "bringup", "--json",
+                "--role", "worker",
+                "--hardware",
+                "--output", "~/Desktop/jarvis-bringup-evidence"
+            ]
+        )
+    }
+
     func testInstalledRoleSyncUsesJarvisServiceSync() {
         let client = JarvisClient(configuration: configuration(
             jarvisRepoPath: "/no/such/jarvis-checkout",

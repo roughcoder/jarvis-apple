@@ -362,7 +362,11 @@ final class JarvisViewModel: ObservableObject {
 
         do {
             let result = try await JarvisClient(configuration: settings.configuration)
-                .bringupEvidence(roles: settings.installedRoles, brainHost: settings.pairingBrainHost)
+                .bringupEvidence(
+                    roles: settings.installedRoles,
+                    brainHost: settings.pairingBrainHost,
+                    outputPath: evidenceOutputDirectory
+                )
             append(result, label: "jarvis bringup")
             try requireSuccess(result)
             activeOperation = nil
@@ -371,6 +375,13 @@ final class JarvisViewModel: ObservableObject {
             lastError = readableError(error)
             append("ERROR: \(readableError(error))")
         }
+    }
+
+    private var evidenceOutputDirectory: String {
+        if let desktopURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first {
+            return desktopURL.appendingPathComponent("jarvis-bringup-evidence").path
+        }
+        return "~/Desktop/jarvis-bringup-evidence"
     }
 
     func copyLatestPairingEntry() {
