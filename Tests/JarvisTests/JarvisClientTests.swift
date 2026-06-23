@@ -62,6 +62,31 @@ final class JarvisClientTests: XCTestCase {
         )
     }
 
+    func testPairingArgumentsCanApplyBrainConfig() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+
+        XCTAssertEqual(
+            client.pairingArguments(
+                deviceID: "room-pi",
+                brainHost: " imac.private ",
+                applyBrainConfig: true,
+                envFile: " ~/.jarvis/.env "
+            ),
+            [
+                "pair", "room-pi", "--json",
+                "--apply-brain-config",
+                "--env-file", "~/.jarvis/.env",
+                "--mac-config",
+                "--pi-installer",
+                "--brain-host", "imac.private"
+            ]
+        )
+    }
+
     func testPairingArgumentsOmitPiInstallerWhenBrainHostIsBlank() {
         let client = JarvisClient(configuration: configuration(
             jarvisRepoPath: "/no/such/jarvis-checkout",

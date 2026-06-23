@@ -14,8 +14,26 @@ final class PairingIssueTests: XCTestCase {
 
         XCTAssertEqual(issue.token, "abc123")
         XCTAssertTrue(issue.brainDevicesEntry.contains("kitchen-pi"))
+        XCTAssertNil(issue.brainConfigPath)
+        XCTAssertNil(issue.brainDevicesCount)
         XCTAssertNil(issue.macConfigCommand)
         XCTAssertNil(issue.piInstallerCommand)
+    }
+
+    func testParsesOptionalBrainConfigUpdateFields() throws {
+        let json = """
+        {
+          "token": "abc123",
+          "brain_devices_entry": "{\\"token\\":\\"abc123\\",\\"device_id\\":\\"kitchen-pi\\"}",
+          "brain_config_path": "/Users/neil/.jarvis/.env",
+          "brain_devices_count": 3
+        }
+        """
+
+        let issue = try PairingIssueParser.parse(data: Data(json.utf8))
+
+        XCTAssertEqual(issue.brainConfigPath, "/Users/neil/.jarvis/.env")
+        XCTAssertEqual(issue.brainDevicesCount, 3)
     }
 
     func testParsesOptionalPiInstallerCommand() throws {

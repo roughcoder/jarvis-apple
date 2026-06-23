@@ -267,7 +267,13 @@ final class JarvisViewModel: ObservableObject {
 
         do {
             let issue = try await JarvisClient(configuration: settings.configuration)
-                .issuePairing(deviceID: deviceID, identity: pairingIdentity, brainHost: settings.pairingBrainHost)
+                .issuePairing(
+                    deviceID: deviceID,
+                    identity: pairingIdentity,
+                    brainHost: settings.pairingBrainHost,
+                    applyBrainConfig: settings.installedRoles.contains(.brain),
+                    envFile: brainConfigEnvFile
+                )
             latestPairingIssue = issue
             var output = """
             Pairing token issued for \(deviceID).
@@ -278,6 +284,14 @@ final class JarvisViewModel: ObservableObject {
             BRAIN_DEVICES entry:
             \(issue.brainDevicesEntry)
             """
+            if let brainConfigPath = issue.brainConfigPath {
+                let count = issue.brainDevicesCount.map { "\($0)" } ?? "updated"
+                output += """
+
+                Brain config updated:
+                \(brainConfigPath) (\(count) configured device(s))
+                """
+            }
             if let macConfigCommand = issue.macConfigCommand {
                 output += """
 
@@ -404,6 +418,10 @@ final class JarvisViewModel: ObservableObject {
 
     private var evidenceSummaryOutputPath: String {
         "\(evidenceOutputDirectory)/jarvis-fleet-summary.json"
+    }
+
+    private var brainConfigEnvFile: String {
+        "\(JarvisClient.defaultInstalledWorkdir)/.env"
     }
 
     func copyLatestPairingEntry() {

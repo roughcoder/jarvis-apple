@@ -27,6 +27,8 @@ enum PairingIssueParser {
         return PairingIssue(
             token: token,
             brainDevicesEntry: entry,
+            brainConfigPath: root.string("brain_config_path"),
+            brainDevicesCount: root.int("brain_devices_count"),
             macConfigCommand: root.string("mac_config_command"),
             piInstallerCommand: root.string("pi_installer_command")
         )
@@ -36,6 +38,8 @@ enum PairingIssueParser {
 struct PairingIssue: Equatable {
     let token: String
     let brainDevicesEntry: String
+    let brainConfigPath: String?
+    let brainDevicesCount: Int?
     let macConfigCommand: String?
     let piInstallerCommand: String?
 }

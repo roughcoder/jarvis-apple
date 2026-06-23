@@ -183,8 +183,20 @@ struct JarvisClient {
         return arguments
     }
 
-    func issuePairing(deviceID: String, identity: String = "", brainHost: String = "") async throws -> PairingIssue {
-        let arguments = pairingArguments(deviceID: deviceID, identity: identity, brainHost: brainHost)
+    func issuePairing(
+        deviceID: String,
+        identity: String = "",
+        brainHost: String = "",
+        applyBrainConfig: Bool = false,
+        envFile: String = ""
+    ) async throws -> PairingIssue {
+        let arguments = pairingArguments(
+            deviceID: deviceID,
+            identity: identity,
+            brainHost: brainHost,
+            applyBrainConfig: applyBrainConfig,
+            envFile: envFile
+        )
         let result = try await runJarvis(arguments: arguments, timeout: 15)
         guard result.succeeded else {
             throw JarvisClientError.commandFailed(result)
@@ -200,11 +212,24 @@ struct JarvisClient {
         }
     }
 
-    func pairingArguments(deviceID: String, identity: String = "", brainHost: String = "") -> [String] {
+    func pairingArguments(
+        deviceID: String,
+        identity: String = "",
+        brainHost: String = "",
+        applyBrainConfig: Bool = false,
+        envFile: String = ""
+    ) -> [String] {
         var arguments = ["pair", deviceID, "--json"]
         let trimmedIdentity = identity.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedIdentity.isEmpty {
             arguments.append(contentsOf: ["--identity", trimmedIdentity])
+        }
+        if applyBrainConfig {
+            arguments.append("--apply-brain-config")
+            let trimmedEnvFile = envFile.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedEnvFile.isEmpty {
+                arguments.append(contentsOf: ["--env-file", trimmedEnvFile])
+            }
         }
         let trimmedBrainHost = brainHost.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedBrainHost.isEmpty {
