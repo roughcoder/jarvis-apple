@@ -169,6 +169,16 @@ Quick local check to verify your branch before release:
 scripts/check_conventional_commits.sh $(git describe --tags --abbrev=0) HEAD
 ```
 
+If your branch contains legacy non-Conventional commits after the baseline tag, release
+version calculation can still proceed (it only ignores non-conforming commits for
+the automatic bump calculation).
+
+To force strict release-bump behavior locally, run:
+
+```bash
+JARVIS_IGNORE_NON_CONVENTIONAL_COMMITS=0 scripts/compute_next_release_version.sh
+```
+
 Once installed as `Jarvis.app`, the menu can update itself from the App
 Release section. It downloads the latest release zip, starts a detached installer
 helper, quits the app, replaces the current `.app` bundle, and reopens the new

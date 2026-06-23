@@ -54,11 +54,20 @@ fi
 bump_major=0
 bump_minor=0
 bump_patch=0
+ignore_non_conventional="${JARVIS_IGNORE_NON_CONVENTIONAL_COMMITS:-1}"
+
 for commit in "${commits[@]}"; do
   body="$(git log --format=%B -n 1 "$commit")"
   subject="${body%%$'\n'*}"
 
   if ! printf '%s\n' "$subject" | grep -Eq '^[a-z]+(\([^)]+\))?(!)?:[[:space:]]+.+$'; then
+    if [[ "$ignore_non_conventional" == "1" ]]; then
+      echo "Ignoring legacy/non-conventional commit in version computation: $commit" >&2
+      echo "  $subject" >&2
+      echo "(consider replacing this commit message with Conventional Commit format)" >&2
+      continue
+    fi
+
     echo "Invalid commit message format: $commit" >&2
     echo "  $subject" >&2
     echo "Expected conventional commit format: type(scope)?: subject" >&2
