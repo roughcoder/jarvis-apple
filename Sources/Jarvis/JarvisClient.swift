@@ -242,6 +242,23 @@ struct JarvisClient {
         ["worker", "--doctor"]
     }
 
+    func bringupEvidence(roles: Set<JarvisRole>, brainHost: String = "") async throws -> CommandResult {
+        try await runJarvis(arguments: bringupArguments(roles: roles, brainHost: brainHost), timeout: 45)
+    }
+
+    func bringupArguments(roles: Set<JarvisRole>, brainHost: String = "") -> [String] {
+        var arguments = ["bringup", "--json"]
+        for role in Self.orderedInstalledRoles(for: roles) {
+            arguments.append(contentsOf: ["--role", role.rawValue])
+        }
+        arguments.append("--hardware")
+        let trimmedBrainHost = brainHost.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedBrainHost.isEmpty {
+            arguments.append(contentsOf: ["--brain-host", trimmedBrainHost])
+        }
+        return arguments
+    }
+
     func runUV(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {
         try await runner.run(
             executable: configuration.uvPath,

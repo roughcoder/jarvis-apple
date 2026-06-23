@@ -98,6 +98,42 @@ final class JarvisClientTests: XCTestCase {
         XCTAssertEqual(client.workerDoctorArguments(), ["worker", "--doctor"])
     }
 
+    func testBringupArgumentsIncludeSelectedRolesHardwareAndBrainHost() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+
+        XCTAssertEqual(
+            client.bringupArguments(roles: [.intercom, .worker], brainHost: " imac.private "),
+            [
+                "bringup", "--json",
+                "--role", "worker",
+                "--role", "intercom",
+                "--hardware",
+                "--brain-host", "imac.private"
+            ]
+        )
+    }
+
+    func testBringupArgumentsCanRunWithoutBrainHost() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+
+        XCTAssertEqual(
+            client.bringupArguments(roles: [.brain], brainHost: " "),
+            [
+                "bringup", "--json",
+                "--role", "brain",
+                "--hardware"
+            ]
+        )
+    }
+
     func testInstalledRoleSyncUsesJarvisServiceSync() {
         let client = JarvisClient(configuration: configuration(
             jarvisRepoPath: "/no/such/jarvis-checkout",

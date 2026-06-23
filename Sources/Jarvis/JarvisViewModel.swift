@@ -350,6 +350,29 @@ final class JarvisViewModel: ObservableObject {
         }
     }
 
+    func collectBringupEvidence() async {
+        guard !settings.installedRoles.isEmpty else {
+            lastError = JarvisClientError.noInstalledRoles.localizedDescription
+            return
+        }
+
+        activeOperation = "Collecting bring-up evidence"
+        lastError = nil
+        lastCommandOutput = ""
+
+        do {
+            let result = try await JarvisClient(configuration: settings.configuration)
+                .bringupEvidence(roles: settings.installedRoles, brainHost: settings.pairingBrainHost)
+            append(result, label: "jarvis bringup")
+            try requireSuccess(result)
+            activeOperation = nil
+        } catch {
+            activeOperation = nil
+            lastError = readableError(error)
+            append("ERROR: \(readableError(error))")
+        }
+    }
+
     func copyLatestPairingEntry() {
         guard let latestPairingIssue else {
             return

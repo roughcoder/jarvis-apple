@@ -270,6 +270,14 @@ struct SetupGuideView: View {
                 }
                 .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
 
+                Button {
+                    openWindow(id: "command-progress")
+                    Task { await viewModel.collectBringupEvidence() }
+                } label: {
+                    Label("Collect Evidence", systemImage: "checklist")
+                }
+                .disabled(settings.installedRoles.isEmpty || viewModel.isBusy)
+
                 Spacer()
             }
             .buttonStyle(.bordered)
