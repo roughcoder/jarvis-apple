@@ -26,7 +26,7 @@ fi
 BASE_REF="$1"
 HEAD_REF="${2:-HEAD}"
 
-commits=( $(git log --format=%H "$BASE_REF..$HEAD_REF") )
+commits=( $(git log --no-merges --format=%H "$BASE_REF..$HEAD_REF") )
 if [[ ${#commits[@]} -eq 0 ]]; then
   echo "No commits to check in $BASE_REF..$HEAD_REF"
   exit 0

@@ -45,7 +45,7 @@ if [[ -n "$BASE_TAG" ]]; then
   range="$BASE_TAG..HEAD"
 fi
 
-commits=( $(git log --format=%H "$range") )
+commits=( $(git log --no-merges --format=%H "$range") )
 if [[ ${#commits[@]} -eq 0 ]]; then
   echo "No commits found for release. Add conventional commits first." >&2
   exit 2
