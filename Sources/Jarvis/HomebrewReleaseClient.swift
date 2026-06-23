@@ -142,13 +142,33 @@ struct HomebrewReleaseClient {
             ?? (cask["current_versions"] as? [String])?.first
             ?? (cask["version"] as? String)
         let installed = (cask["installed_versions"] as? [String])?.first ?? installedVersion
+        let latest = (cask["current_version"] as? String)
+            ?? (cask["current_versions"] as? [String])?.first
+            ?? (cask["version"] as? String)
+        let isOutdated = Self.isOutdated(cask, installedVersion: installed, latestVersion: latest)
 
         return HomebrewCaskStatus(
             token: token,
             installedVersion: installed,
-            latestVersion: latestVersion,
-            isOutdated: true
+            latestVersion: latest,
+            isOutdated: isOutdated
         )
+    }
+
+    private static func isOutdated(
+        _ cask: [String: Any],
+        installedVersion: String,
+        latestVersion: String?
+    ) -> Bool {
+        if let explicitOutdated = cask["outdated"] as? Bool {
+            return explicitOutdated
+        }
+
+        guard let latestVersion else {
+            return false
+        }
+
+        return AppVersion.isRelease(latestVersion, newerThan: installedVersion)
     }
 
     static func outputRequiresTrust(_ output: String) -> Bool {

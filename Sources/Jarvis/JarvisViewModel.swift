@@ -567,7 +567,7 @@ final class JarvisViewModel: ObservableObject {
         } catch {
             latestAppRelease = nil
             homebrewCaskStatus = nil
-            appReleaseStatus = readableError(error)
+            appReleaseStatus = friendlyAppReleaseError(error)
             if !silent {
                 lastError = readableError(error)
             }
@@ -748,6 +748,15 @@ final class JarvisViewModel: ObservableObject {
         guard result.succeeded else {
             throw JarvisClientError.commandFailed(result)
         }
+    }
+
+    private func friendlyAppReleaseError(_ error: Error) -> String {
+        if let clientError = error as? HomebrewReleaseClientError,
+           case .invalidOutput = clientError {
+            return "Homebrew check returned unexpected output. Try again. Tip: run 'brew update' once and retry."
+        }
+
+        return readableError(error)
     }
 
     private func fleetStatusWaitingForSelectedServices(

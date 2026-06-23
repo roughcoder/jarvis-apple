@@ -34,6 +34,32 @@ final class HomebrewReleaseClientTests: XCTestCase {
         XCTAssertTrue(status.isOutdated)
     }
 
+    func testParsesUptoDateCaskJSON() throws {
+        let json = """
+        {
+          "formulae": [],
+          "casks": [
+            {
+              "name": "jarvis-app",
+              "installed_versions": ["0.2.3"],
+              "current_version": "0.2.3",
+              "outdated": false
+            }
+          ]
+        }
+        """
+
+        let status = try HomebrewReleaseClient.status(
+            fromOutdatedJSON: Data(json.utf8),
+            token: "jarvis-app",
+            installedVersion: "0.2.3"
+        )
+
+        XCTAssertEqual(status.installedVersion, "0.2.3")
+        XCTAssertEqual(status.latestVersion, "0.2.3")
+        XCTAssertFalse(status.isOutdated)
+    }
+
     func testEmptyOutdatedJSONMeansUpToDate() throws {
         let status = try HomebrewReleaseClient.status(
             fromOutdatedJSON: Data(#"{"formulae":[],"casks":[]}"#.utf8),
