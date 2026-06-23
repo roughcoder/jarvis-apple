@@ -205,10 +205,14 @@ Manual Homebrew equivalent:
 
 ```bash
 brew tap roughcoder/infinite-stack
+brew trust --formula roughcoder/infinite-stack/jarvis
+brew trust --cask roughcoder/infinite-stack/jarvis-app
 brew install jarvis
 brew install --cask jarvis-app
 xattr -dr com.apple.quarantine /Applications/Jarvis.app
 brew update
+brew trust --formula roughcoder/infinite-stack/jarvis
+brew trust --cask roughcoder/infinite-stack/jarvis-app
 brew upgrade jarvis
 brew upgrade --cask jarvis-app
 xattr -dr com.apple.quarantine /Applications/Jarvis.app
