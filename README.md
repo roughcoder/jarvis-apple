@@ -152,6 +152,12 @@ brew install --cask jarvis-app
 open -a Jarvis
 ```
 
+Clean reset for fresh install testing:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/roughcoder/jarvis/main/scripts/uninstall_mac.sh | bash
+```
+
 After the app opens:
 
 1. Open the Jarvis menu bar item.
