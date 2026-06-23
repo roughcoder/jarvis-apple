@@ -262,8 +262,8 @@ struct SetupGuideView: View {
                     } label: {
                         Label("Install Services", systemImage: "square.and.arrow.down")
                     }
-                    .disabled(settings.installedRoles.isEmpty || viewModel.isBusy || viewModel.selectedServicesAreLoaded)
-                    .help(viewModel.selectedServicesAreLoaded ? "Selected services are already installed. Use Clean Uninstall before reinstalling." : "Install selected launchd services")
+                    .disabled(settings.installedRoles.isEmpty || viewModel.isBusy || viewModel.selectedServicesAreHealthy)
+                    .help(viewModel.selectedServicesAreHealthy ? "Selected services are healthy. Use Update Runtime or role controls if needed." : "Install or repair selected launchd services")
 
                     Button {
                         openWindow(id: "command-progress")

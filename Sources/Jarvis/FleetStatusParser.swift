@@ -128,11 +128,14 @@ enum FleetStatusParser {
 
         let explicit = explicitStatusLevel(from: [node])
         let available = firstBool(nodes: [node], keys: ["available", "docker_available", "running"])
+        let configured = firstBool(nodes: [node], keys: ["configured", "compose_configured"])
         let allRunning = firstBool(nodes: [node], keys: ["all_running", "required_running", "compose_running"])
         let requiredStopped = firstBool(nodes: [node], keys: ["required_stopped", "required_services_stopped"])
 
         let level: StatusLevel
-        if requiredStopped == true || allRunning == false {
+        if configured == false {
+            level = .green
+        } else if requiredStopped == true || allRunning == false {
             level = .red
         } else if allRunning == true {
             level = .green
@@ -142,7 +145,8 @@ enum FleetStatusParser {
             level = explicit ?? .amber
         }
 
-        let headline = firstString(in: node, keys: ["summary", "status", "state"]) ?? level.title
+        let headline = firstString(in: node, keys: ["summary", "status", "state"])
+            ?? (configured == false ? "Not configured" : level.title)
         let detail = firstString(in: node, keys: ["detail", "message", "reason"])
             ?? "Docker checks are \(level.title.lowercased())."
         return DockerStatus(level: level, headline: headline.capitalizedSentence, detail: detail)

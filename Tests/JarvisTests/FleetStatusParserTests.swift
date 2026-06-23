@@ -60,4 +60,33 @@ final class FleetStatusParserTests: XCTestCase {
 
         XCTAssertEqual(status.roles.first { $0.role == .intercom }?.level, .amber)
     }
+
+    func testDockerWithoutComposeProjectIsNonBlocking() throws {
+        let json = """
+        {
+          "services": {
+            "brain": { "loaded": true },
+            "intercom": { "loaded": true },
+            "worker": { "loaded": true }
+          },
+          "brain": { "reachable": true, "auth_configured": true },
+          "intercom": { "paired": true },
+          "worker": { "reachable": true },
+          "docker": {
+            "available": false,
+            "configured": false,
+            "status": "not_configured",
+            "detail": "No local Docker compose project found.",
+            "services": []
+          },
+          "git": { "dirty": false }
+        }
+        """
+
+        let status = try FleetStatusParser.parse(data: Data(json.utf8))
+
+        XCTAssertEqual(status.docker.level, .green)
+        XCTAssertEqual(status.docker.detail, "No local Docker compose project found.")
+        XCTAssertEqual(status.overall, .green)
+    }
 }

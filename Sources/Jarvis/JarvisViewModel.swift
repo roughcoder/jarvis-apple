@@ -52,9 +52,9 @@ final class JarvisViewModel: ObservableObject {
         return AppVersion.isRelease(latestAppRelease.tagName, newerThan: currentAppVersion)
     }
 
-    var selectedServicesAreLoaded: Bool {
+    var selectedServicesAreHealthy: Bool {
         !settings.installedRoles.isEmpty && settings.installedRoles.allSatisfy { role in
-            fleetStatus.roles.first { $0.role == role }?.loaded == true
+            fleetStatus.roles.first { $0.role == role }?.level == .green
         }
     }
 
@@ -221,8 +221,8 @@ final class JarvisViewModel: ObservableObject {
             lastError = JarvisClientError.noInstalledRoles.localizedDescription
             return
         }
-        if selectedServicesAreLoaded {
-            lastCommandOutput = "Selected Jarvis services are already installed. Use Update Runtime, restart individual services, or Clean Uninstall before reinstalling."
+        if selectedServicesAreHealthy {
+            lastCommandOutput = "Selected Jarvis services are already healthy. Use Update Runtime or restart individual services if needed."
             return
         }
 
@@ -239,6 +239,13 @@ final class JarvisViewModel: ObservableObject {
             try requireSuccess(sync)
 
             for role in JarvisRole.allCases where settings.installedRoles.contains(role) {
+                activeOperation = "Stopping existing \(role.title)"
+                let stop = try await client.launchd(.stop, role: role)
+                append(stop, label: "launchctl bootout \(role.title)")
+                if !stop.succeeded && !isMissingLaunchdService(stop.combinedOutput) {
+                    try requireSuccess(stop)
+                }
+
                 activeOperation = "Installing \(role.title)"
                 let install = try await client.installService(role: role)
                 append(install, label: "jarvis service install \(role.rawValue)")
@@ -276,7 +283,7 @@ final class JarvisViewModel: ObservableObject {
                 activeOperation = "Stopping \(role.title)"
                 let stop = try await client.launchd(.stop, role: role)
                 append(stop, label: "launchctl bootout \(role.title)")
-                if !stop.succeeded && !stop.combinedOutput.localizedCaseInsensitiveContains("could not find specified service") {
+                if !stop.succeeded && !isMissingLaunchdService(stop.combinedOutput) {
                     append("Ignoring stop result for \(role.title): \(stop.combinedOutput)")
                 }
             }
@@ -743,6 +750,11 @@ final class JarvisViewModel: ObservableObject {
         guard result.succeeded else {
             throw JarvisClientError.commandFailed(result)
         }
+    }
+
+    private func isMissingLaunchdService(_ output: String) -> Bool {
+        output.localizedCaseInsensitiveContains("could not find specified service")
+            || output.localizedCaseInsensitiveContains("no such process")
     }
 
     private func append(_ result: CommandResult, label: String) {
