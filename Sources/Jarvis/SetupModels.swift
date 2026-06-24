@@ -52,6 +52,13 @@ struct SetupMachine: Codable, Equatable {
 }
 
 struct SetupProviders: Codable, Equatable {
+    var aiProvider = "openai"
+    var aiModel = "gpt-5.5"
+    var sttProvider = "local"
+    var ttsProvider = "inworld"
+    var webSearchProvider = "tavily"
+    var macControlProvider = "openai"
+    var macControlModel = "gpt-5.5"
     var anthropicAPIKey = ""
     var geminiAPIKey = ""
     var openAIAPIKey = ""
@@ -70,6 +77,13 @@ struct SetupProviders: Codable, Equatable {
     var hasWorkerPeekabooOpenRouterAPIKey = false
 
     enum CodingKeys: String, CodingKey {
+        case aiProvider = "ai_provider"
+        case aiModel = "ai_model"
+        case sttProvider = "stt_provider"
+        case ttsProvider = "tts_provider"
+        case webSearchProvider = "web_search_provider"
+        case macControlProvider = "mac_control_provider"
+        case macControlModel = "mac_control_model"
         case anthropicAPIKey = "anthropic_api_key"
         case geminiAPIKey = "gemini_api_key"
         case openAIAPIKey = "openai_api_key"
@@ -92,6 +106,13 @@ struct SetupProviders: Codable, Equatable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        aiProvider = try container.decodeIfPresent(String.self, forKey: .aiProvider) ?? "openai"
+        aiModel = try container.decodeIfPresent(String.self, forKey: .aiModel) ?? "gpt-5.5"
+        sttProvider = try container.decodeIfPresent(String.self, forKey: .sttProvider) ?? "local"
+        ttsProvider = try container.decodeIfPresent(String.self, forKey: .ttsProvider) ?? "inworld"
+        webSearchProvider = try container.decodeIfPresent(String.self, forKey: .webSearchProvider) ?? "tavily"
+        macControlProvider = try container.decodeIfPresent(String.self, forKey: .macControlProvider) ?? "openai"
+        macControlModel = try container.decodeIfPresent(String.self, forKey: .macControlModel) ?? "gpt-5.5"
         anthropicAPIKey = try container.decodeIfPresent(String.self, forKey: .anthropicAPIKey) ?? ""
         geminiAPIKey = try container.decodeIfPresent(String.self, forKey: .geminiAPIKey) ?? ""
         openAIAPIKey = try container.decodeIfPresent(String.self, forKey: .openAIAPIKey) ?? ""

@@ -21,7 +21,7 @@ final class JarvisOnboardingUITests: XCTestCase {
 
         XCTAssertTrue(app.descendants(matching: .any)["setup.wizard"].waitForExistence(timeout: 5))
         completeRequiredSetupFields(in: app)
-        runUITestCommand("apply", in: app)
+        clickButton("setup.apply", in: app)
 
         waitForUITestState("validated", in: app)
         XCTAssertEqual(app.textFields["setup.test.completed"].value as? String, "true")
@@ -35,7 +35,7 @@ final class JarvisOnboardingUITests: XCTestCase {
 
         XCTAssertTrue(app.descendants(matching: .any)["setup.wizard"].waitForExistence(timeout: 5))
         completeRequiredSetupFields(in: app)
-        runUITestCommand("apply", in: app)
+        clickButton("setup.apply", in: app)
 
         waitForUITestState("error", in: app)
         let error = app.textFields["setup.test.error"]
@@ -46,16 +46,57 @@ final class JarvisOnboardingUITests: XCTestCase {
 
     @MainActor
     private func completeRequiredSetupFields(in app: XCUIApplication) {
+        clickButton("setup.brain.create", in: app)
+
         replaceText(app.textFields["setup.admin.name"], with: "Neil Barton")
         replaceText(app.textFields["setup.admin.email"], with: "neil@example.com")
-        replaceText(app.textFields["setup.admin.phone"], with: "+447921815819")
-        runUITestCommand("next", in: app)
+        replaceText(app.textFields["setup.admin.phone"], with: "07921815819")
+        clickButton("setup.next", in: app)
+
+        clickButton("setup.back", in: app)
+        XCTAssertTrue(app.textFields["setup.admin.name"].waitForExistence(timeout: 3))
+        clickButton("setup.next", in: app)
 
         replaceText(app.textFields["setup.machine.device"], with: "office-mac")
         replaceText(app.textFields["setup.machine.room"], with: "Office")
-        runUITestCommand("next", in: app)
+        clickButton("setup.next", in: app)
+        clickButton("setup.next", in: app)
+        clickButton("setup.next", in: app)
+        clickButton("setup.next", in: app)
+        clickButton("setup.next", in: app)
+        clickButton("setup.next", in: app)
+    }
 
-        runUITestCommand("brain", in: app)
+    @MainActor
+    private func clickButton(_ identifier: String, in app: XCUIApplication) {
+        let button = app.buttons[identifier]
+        if button.waitForExistence(timeout: 1) {
+            XCTAssertTrue(button.isEnabled, "Control \(identifier) is disabled")
+            button.click()
+            return
+        }
+        if let title = buttonTitle(for: identifier) {
+            let titledButton = app.buttons[title]
+            if titledButton.waitForExistence(timeout: 1) {
+                XCTAssertTrue(titledButton.isEnabled, "Control \(identifier) is disabled")
+                titledButton.click()
+                return
+            }
+        }
+        let element = app.descendants(matching: .any)[identifier]
+        XCTAssertTrue(element.waitForExistence(timeout: 3), "Missing control \(identifier)")
+        XCTAssertTrue(element.isEnabled, "Control \(identifier) is disabled")
+        element.click()
+    }
+
+    private func buttonTitle(for identifier: String) -> String? {
+        switch identifier {
+        case "setup.back": "Back"
+        case "setup.next": "Next"
+        case "setup.apply": "Apply"
+        case "setup.close": "Close"
+        default: nil
+        }
     }
 
     @MainActor
@@ -64,11 +105,6 @@ final class JarvisOnboardingUITests: XCTestCase {
         element.click()
         element.typeKey("a", modifierFlags: [.command])
         element.typeText(text)
-    }
-
-    @MainActor
-    private func runUITestCommand(_ command: String, in app: XCUIApplication) {
-        replaceText(app.textFields["setup.test.command"], with: command)
     }
 
     @MainActor

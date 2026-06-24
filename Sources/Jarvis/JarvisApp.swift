@@ -29,10 +29,10 @@ struct JarvisApp: App {
                         await viewModel.startPolling()
                     }
             } else {
-                SetupWizardView()
+                SetupRedirectView()
                     .environmentObject(settings)
                     .environmentObject(viewModel)
-                    .frame(width: 860, height: 620)
+                    .frame(width: 260)
             }
         } label: {
             Label("Jarvis", systemImage: AppIdentity.menuBarSymbolName)
@@ -56,5 +56,31 @@ struct JarvisApp: App {
                 .environmentObject(viewModel)
         }
         .defaultSize(width: 920, height: 680)
+    }
+}
+
+private struct SetupRedirectView: View {
+    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var viewModel: JarvisViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Setup required", systemImage: "switch.2")
+                .font(.headline)
+            Text("Jarvis needs this Mac configured before the operator panel is available.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                SetupWindowPresenter.shared.show(settings: settings, viewModel: viewModel)
+            } label: {
+                Label("Open Setup", systemImage: "arrow.up.forward.app")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(14)
+        .task {
+            SetupWindowPresenter.shared.show(settings: settings, viewModel: viewModel)
+        }
     }
 }
