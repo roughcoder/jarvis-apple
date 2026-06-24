@@ -7,6 +7,7 @@ enum JarvisClientError: LocalizedError {
     case noInstalledRoles
     case invalidStatusJSON(String)
     case invalidPairingJSON(String)
+    case invalidSetupJSON(String)
 
     var errorDescription: String? {
         switch self {
@@ -23,6 +24,8 @@ enum JarvisClientError: LocalizedError {
             return "fleet-status did not return valid JSON.\n\(output)"
         case .invalidPairingJSON(let output):
             return "jarvis pair did not return valid JSON.\n\(output)"
+        case .invalidSetupJSON(let output):
+            return "jarvis setup did not return valid JSON.\n\(output)"
         }
     }
 }
@@ -65,6 +68,21 @@ struct JarvisClient {
     static let defaultInstalledWorkdir = "\(NSHomeDirectory())/.jarvis"
 
     func fleetStatus(includeDocker: Bool) async throws -> FleetStatusResponse {
+        if Self.uiTestModeEnabled {
+            let json = Self.uiTestFleetStatusJSON
+            let result = CommandResult(
+                executable: configuration.jarvisPath,
+                arguments: ["fleet-status", "--json"],
+                currentDirectory: nil,
+                exitCode: 0,
+                stdout: json,
+                stderr: "",
+                timedOut: false,
+                duration: 0
+            )
+            return FleetStatusResponse(status: try FleetStatusParser.parse(data: Data(json.utf8)), command: result)
+        }
+
         var arguments = ["fleet-status", "--json"]
         if !includeDocker {
             arguments.append("--no-docker")
@@ -167,6 +185,81 @@ struct JarvisClient {
 
     func serviceSyncArguments(roles: [JarvisRole]) -> [String] {
         ["service", "sync"] + roles.map(\.rawValue)
+    }
+
+    func setupRead(envFile: String = "\(Self.defaultInstalledWorkdir)/.env") async throws -> SetupState {
+        if Self.uiTestModeEnabled {
+            return .empty
+        }
+
+        let result = try await runJarvis(arguments: setupReadArguments(envFile: envFile), timeout: 15)
+        guard result.succeeded else {
+            throw JarvisClientError.commandFailed(result)
+        }
+        return try decodeSetup(SetupState.self, from: result.stdout)
+    }
+
+    func setupReadArguments(envFile: String) -> [String] {
+        ["setup", "read", "--json", "--env-file", envFile]
+    }
+
+    func setupApply(_ state: SetupState, envFile: String = "\(Self.defaultInstalledWorkdir)/.env") async throws -> SetupApplyResult {
+        if Self.uiTestModeEnabled {
+            return SetupApplyResult(
+                envFile: envFile,
+                userFile: "\(Self.defaultInstalledWorkdir)/jarvis-workspace/users/neil-barton.md",
+                roles: Self.orderedInstalledRoles(for: state.roles),
+                changedKeys: ["BRAIN_HOST", "BRAIN_PORT"]
+            )
+        }
+
+        let input = try String(data: JSONEncoder.setupEncoder.encode(state), encoding: .utf8) ?? "{}"
+        let result = try await runJarvis(arguments: setupApplyArguments(envFile: envFile), standardInput: input, timeout: 60)
+        guard result.succeeded else {
+            throw JarvisClientError.commandFailed(result)
+        }
+        return try decodeSetup(SetupApplyResult.self, from: result.stdout)
+    }
+
+    func setupApplyArguments(envFile: String) -> [String] {
+        ["setup", "apply", "--json", "--env-file", envFile]
+    }
+
+    func setupValidate(roles: Set<JarvisRole>, envFile: String = "\(Self.defaultInstalledWorkdir)/.env") async throws -> SetupValidation {
+        if Self.uiTestModeEnabled {
+            return SetupValidation(ok: true, missing: [], warnings: [])
+        }
+
+        let result = try await runJarvis(arguments: setupValidateArguments(roles: roles, envFile: envFile), timeout: 20)
+        if !result.succeeded && result.stdout.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            throw JarvisClientError.commandFailed(result)
+        }
+        return try decodeSetup(SetupValidation.self, from: result.stdout)
+    }
+
+    func setupValidateArguments(roles: Set<JarvisRole>, envFile: String) -> [String] {
+        var arguments = ["setup", "validate", "--json", "--env-file", envFile]
+        for role in Self.orderedInstalledRoles(for: roles) {
+            arguments.append(contentsOf: ["--role", role.rawValue])
+        }
+        return arguments
+    }
+
+    func whatsappAuth(account: String = "") async throws -> WhatsAppAuthResult {
+        let result = try await runJarvis(arguments: whatsappAuthArguments(account: account), timeout: 320)
+        if !result.succeeded && result.stdout.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            throw JarvisClientError.commandFailed(result)
+        }
+        return try decodeSetup(WhatsAppAuthResult.self, from: result.stdout)
+    }
+
+    func whatsappAuthArguments(account: String = "") -> [String] {
+        var arguments = ["whatsapp-auth", "--json"]
+        let trimmed = account.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            arguments.append(contentsOf: ["--account", trimmed])
+        }
+        return arguments
     }
 
     func installService(role: JarvisRole) async throws -> CommandResult {
@@ -342,7 +435,7 @@ struct JarvisClient {
         )
     }
 
-    func runJarvis(arguments: [String], timeout: TimeInterval) async throws -> CommandResult {
+    func runJarvis(arguments: [String], standardInput: String? = nil, timeout: TimeInterval) async throws -> CommandResult {
         let invocation = jarvisInvocation(arguments: arguments)
         try prepareForInvocation(invocation)
         return try await runner.run(
@@ -350,6 +443,7 @@ struct JarvisClient {
             arguments: invocation.arguments,
             currentDirectory: invocation.currentDirectory,
             environment: invocation.environment,
+            standardInput: standardInput,
             timeout: timeout
         )
     }
@@ -433,7 +527,7 @@ struct JarvisClient {
     }
 
     static func orderedInstalledRoles(for roles: Set<JarvisRole>) -> [JarvisRole] {
-        [.brain, .worker, .intercom].filter { roles.contains($0) }
+        [.brain, .worker, .intercom, .whatsapp].filter { roles.contains($0) }
     }
 
     private static func extrasForRole(_ role: JarvisRole) -> [String] {
@@ -444,6 +538,39 @@ struct JarvisClient {
             ["worker", "browser"]
         case .intercom:
             ["stt", "vad", "wake"]
+        case .whatsapp:
+            []
         }
+    }
+
+    private static var uiTestModeEnabled: Bool {
+        ProcessInfo.processInfo.environment["JARVIS_APP_UI_TEST_MODE"] == "1"
+            || ProcessInfo.processInfo.arguments.contains("--jarvis-ui-test-mode")
+            || Bundle.main.bundleIdentifier == "dev.infinitestack.jarvis.mac.uitesthost"
+    }
+
+    private static var uiTestFleetStatusJSON: String {
+        """
+        {"version":"uitest","device_id":"office-mac","platform":"Darwin","services":{"brain":{"loaded":true}},"brain":{"reachable":true,"paired":true},"git":{"available":false},"docker":{"configured":false},"pairing":{"identity":"neil-barton","scope":"personal","capabilities":1},"worker":{"running_jobs":0}}
+        """
+    }
+
+    private func decodeSetup<T: Decodable>(_ type: T.Type, from output: String) throws -> T {
+        guard let data = output.data(using: .utf8) else {
+            throw JarvisClientError.invalidSetupJSON(output)
+        }
+        do {
+            return try JSONDecoder().decode(type, from: data)
+        } catch {
+            throw JarvisClientError.invalidSetupJSON(output)
+        }
+    }
+}
+
+private extension JSONEncoder {
+    static var setupEncoder: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return encoder
     }
 }

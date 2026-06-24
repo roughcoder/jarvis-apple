@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 enum CommandRunnerError: LocalizedError {
@@ -16,12 +17,16 @@ enum CommandRunnerError: LocalizedError {
 
 struct CommandRunner {
     var redactsOutput = true
+    private static let ignoreBrokenPipeSignal: Void = {
+        signal(SIGPIPE, SIG_IGN)
+    }()
 
     func run(
         executable: String,
         arguments: [String],
         currentDirectory: String? = nil,
         environment: [String: String] = [:],
+        standardInput: String? = nil,
         timeout: TimeInterval = 15
     ) async throws -> CommandResult {
         try await Task.detached(priority: .userInitiated) {
@@ -30,6 +35,7 @@ struct CommandRunner {
                 arguments: arguments,
                 currentDirectory: currentDirectory,
                 environment: environment,
+                standardInput: standardInput,
                 timeout: timeout,
                 redactsOutput: redactsOutput
             )
@@ -41,9 +47,11 @@ struct CommandRunner {
         arguments: [String],
         currentDirectory: String?,
         environment: [String: String],
+        standardInput: String?,
         timeout: TimeInterval,
         redactsOutput: Bool
     ) throws -> CommandResult {
+        _ = ignoreBrokenPipeSignal
         let startedAt = Date()
         let expandedExecutable = FilePath.expandingTilde(in: executable)
         guard FileManager.default.isExecutableFile(atPath: expandedExecutable) else {
@@ -68,6 +76,10 @@ struct CommandRunner {
         let stderrPipe = Pipe()
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
+        let stdinPipe = Pipe()
+        if standardInput != nil {
+            process.standardInput = stdinPipe
+        }
 
         let outputQueue = DispatchQueue(label: "jarvis.command-output", attributes: .concurrent)
         var stdoutData = Data()
@@ -99,6 +111,15 @@ struct CommandRunner {
             waitGroup.leave()
         }
 
+        let stdinGroup = DispatchGroup()
+        if let standardInput {
+            stdinGroup.enter()
+            DispatchQueue.global(qos: .userInitiated).async {
+                writeStandardInput(standardInput, to: stdinPipe.fileHandleForWriting)
+                stdinGroup.leave()
+            }
+        }
+
         let timedOut = waitGroup.wait(timeout: .now() + timeout) == .timedOut
         if timedOut {
             process.terminate()
@@ -109,6 +130,7 @@ struct CommandRunner {
             }
         }
 
+        _ = stdinGroup.wait(timeout: .now() + 2)
         outputGroup.wait()
 
         let stdout = String(data: stdoutData, encoding: .utf8) ?? ""
@@ -126,6 +148,30 @@ struct CommandRunner {
             timedOut: timedOut,
             duration: Date().timeIntervalSince(startedAt)
         )
+    }
+
+    private static func writeStandardInput(_ standardInput: String, to handle: FileHandle) {
+        let data = Data(standardInput.utf8)
+        let fileDescriptor = handle.fileDescriptor
+        data.withUnsafeBytes { rawBuffer in
+            guard let baseAddress = rawBuffer.baseAddress else {
+                return
+            }
+            var offset = 0
+            while offset < rawBuffer.count {
+                let remaining = rawBuffer.count - offset
+                let chunkSize = min(remaining, 16 * 1024)
+                let written = Darwin.write(fileDescriptor, baseAddress.advanced(by: offset), chunkSize)
+                if written > 0 {
+                    offset += written
+                } else if written == -1 && errno == EINTR {
+                    continue
+                } else {
+                    break
+                }
+            }
+        }
+        Darwin.close(fileDescriptor)
     }
 }
 

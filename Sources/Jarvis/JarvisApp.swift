@@ -15,19 +15,25 @@ struct JarvisApp: App {
         if settings.shouldAutoOpenSetup {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 SetupWindowPresenter.shared.show(settings: settings, viewModel: viewModel)
-                settings.markSetupAutoOpened()
             }
         }
     }
 
     var body: some Scene {
         MenuBarExtra {
-            MenuContentView()
-                .environmentObject(settings)
-                .environmentObject(viewModel)
-                .task {
-                    await viewModel.startPolling()
-                }
+            if settings.setupCompleted {
+                MenuContentView()
+                    .environmentObject(settings)
+                    .environmentObject(viewModel)
+                    .task {
+                        await viewModel.startPolling()
+                    }
+            } else {
+                SetupWizardView()
+                    .environmentObject(settings)
+                    .environmentObject(viewModel)
+                    .frame(width: 860, height: 620)
+            }
         } label: {
             Label("Jarvis", systemImage: AppIdentity.menuBarSymbolName)
         }
@@ -45,10 +51,10 @@ struct JarvisApp: App {
         .defaultSize(width: 760, height: 520)
 
         Window("Jarvis Setup", id: "setup") {
-            SetupGuideView()
+            SetupWizardView()
                 .environmentObject(settings)
                 .environmentObject(viewModel)
         }
-        .defaultSize(width: 720, height: 560)
+        .defaultSize(width: 920, height: 680)
     }
 }

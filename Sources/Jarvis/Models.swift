@@ -48,6 +48,7 @@ enum JarvisRole: String, CaseIterable, Identifiable, Codable, Hashable {
     case brain
     case intercom
     case worker
+    case whatsapp
 
     var id: String { rawValue }
 
@@ -56,6 +57,7 @@ enum JarvisRole: String, CaseIterable, Identifiable, Codable, Hashable {
         case .brain: "Brain"
         case .intercom: "Intercom"
         case .worker: "Worker"
+        case .whatsapp: "WhatsApp"
         }
     }
 

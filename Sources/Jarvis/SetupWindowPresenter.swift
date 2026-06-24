@@ -16,13 +16,13 @@ final class SetupWindowPresenter {
             return
         }
 
-        let content = SetupGuideView()
+        let content = SetupWizardView()
             .environmentObject(settings)
             .environmentObject(viewModel)
         let hostingController = NSHostingController(rootView: content)
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Jarvis Setup"
-        window.setContentSize(NSSize(width: 720, height: 560))
+        window.setContentSize(NSSize(width: 920, height: 680))
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.isReleasedWhenClosed = false
         window.center()

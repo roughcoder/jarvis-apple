@@ -11,7 +11,8 @@ final class FleetStatusParserTests: XCTestCase {
           "services": {
             "brain": { "loaded": true },
             "intercom": { "loaded": true },
-            "worker": { "loaded": true }
+            "worker": { "loaded": true },
+            "whatsapp": { "loaded": true }
           },
           "brain": { "reachable": true, "paired": true, "pairing_token": "secret-token" },
           "intercom": { "paired": true },
@@ -30,6 +31,7 @@ final class FleetStatusParserTests: XCTestCase {
         XCTAssertEqual(status.roles.first { $0.role == .brain }?.level, .green)
         XCTAssertEqual(status.roles.first { $0.role == .brain }?.loaded, true)
         XCTAssertEqual(status.roles.first { $0.role == .worker }?.level, .green)
+        XCTAssertEqual(status.roles.first { $0.role == .whatsapp }?.level, .green)
         XCTAssertEqual(status.worker.runningJobs, 2)
         XCTAssertEqual(status.pairing.capabilityCount, 2)
         XCTAssertFalse(status.rawJSON.contains("secret-token"))

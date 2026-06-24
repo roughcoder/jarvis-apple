@@ -57,19 +57,32 @@ final class AppSettings: ObservableObject {
         didSet { saveGitHubToken() }
     }
 
+    @Published var setupCompleted: Bool {
+        didSet { save() }
+    }
+
+    @Published var setupCompletedAt: Date? {
+        didSet { save() }
+    }
+
+    @Published var setupLastStep: Int {
+        didSet { save() }
+    }
+
     private let defaults: UserDefaults
     private let keychain: KeychainStore
 
-    init(defaults: UserDefaults = .standard, keychain: KeychainStore = .shared) {
+    init(defaults: UserDefaults = AppSettings.defaultUserDefaults(), keychain: KeychainStore = .shared) {
         self.defaults = defaults
         self.keychain = keychain
-        jarvisRepoPath = defaults.string(forKey: Keys.jarvisRepoPath)
+        let environment = ProcessInfo.processInfo.environment
+        jarvisRepoPath = environment[Keys.envJarvisRepoPath] ?? defaults.string(forKey: Keys.jarvisRepoPath)
             ?? Self.defaultJarvisRepoPath
-        jarvisPath = defaults.string(forKey: Keys.jarvisPath)
+        jarvisPath = environment[Keys.envJarvisPath] ?? defaults.string(forKey: Keys.jarvisPath)
             ?? Self.defaultJarvisPath
-        uvPath = defaults.string(forKey: Keys.uvPath)
+        uvPath = environment[Keys.envUVPath] ?? defaults.string(forKey: Keys.uvPath)
             ?? Self.defaultUVPath
-        logsPath = defaults.string(forKey: Keys.logsPath)
+        logsPath = environment[Keys.envLogsPath] ?? defaults.string(forKey: Keys.logsPath)
             ?? "~/Library/Logs/Jarvis"
         let roleNames = defaults.stringArray(forKey: Keys.installedRoles) ?? []
         installedRoles = Set(roleNames.compactMap(JarvisRole.init(rawValue:)))
@@ -81,10 +94,13 @@ final class AppSettings: ObservableObject {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         appReleaseRepository = storedReleaseRepository ?? AppIdentity.releaseRepository
         appReleaseGitHubToken = keychain.read(service: Keys.keychainService, account: Keys.githubTokenAccount) ?? ""
+        setupCompleted = defaults.bool(forKey: Keys.setupCompleted)
+        setupCompletedAt = defaults.object(forKey: Keys.setupCompletedAt) as? Date
+        setupLastStep = defaults.object(forKey: Keys.setupLastStep) as? Int ?? 0
     }
 
     var shouldAutoOpenSetup: Bool {
-        !defaults.bool(forKey: Keys.didAutoOpenSetup) && installedRoles.isEmpty
+        !setupCompleted
     }
 
     var configuration: JarvisConfiguration {
@@ -113,11 +129,24 @@ final class AppSettings: ObservableObject {
         defaults.set(true, forKey: Keys.didAutoOpenSetup)
     }
 
+    func markSetupCompleted(step: Int) {
+        setupCompleted = true
+        setupCompletedAt = Date()
+        setupLastStep = step
+    }
+
+    func rememberSetupStep(_ step: Int) {
+        setupLastStep = step
+    }
+
     func resetInstalledState() {
         installedRoles = []
         pairingBrainHost = ""
         jarvisRepoPath = ""
         defaults.set(false, forKey: Keys.didAutoOpenSetup)
+        setupCompleted = false
+        setupCompletedAt = nil
+        setupLastStep = 0
     }
 
     private func save() {
@@ -130,6 +159,13 @@ final class AppSettings: ObservableObject {
         defaults.set(pollInterval, forKey: Keys.pollInterval)
         defaults.set(dockerChecksEnabled, forKey: Keys.dockerChecksEnabled)
         defaults.set(appReleaseRepository, forKey: Keys.appReleaseRepository)
+        defaults.set(setupCompleted, forKey: Keys.setupCompleted)
+        if let setupCompletedAt {
+            defaults.set(setupCompletedAt, forKey: Keys.setupCompletedAt)
+        } else {
+            defaults.removeObject(forKey: Keys.setupCompletedAt)
+        }
+        defaults.set(setupLastStep, forKey: Keys.setupLastStep)
     }
 
     private func saveGitHubToken() {
@@ -138,6 +174,16 @@ final class AppSettings: ObservableObject {
             service: Keys.keychainService,
             account: Keys.githubTokenAccount
         )
+    }
+
+    nonisolated private static func defaultUserDefaults() -> UserDefaults {
+        let environment = ProcessInfo.processInfo.environment
+        if let suiteName = environment[Keys.envDefaultsSuite],
+           let defaults = UserDefaults(suiteName: suiteName)
+        {
+            return defaults
+        }
+        return .standard
     }
 
     private enum Keys {
@@ -151,8 +197,16 @@ final class AppSettings: ObservableObject {
         static let dockerChecksEnabled = "dockerChecksEnabled"
         static let appReleaseRepository = "appReleaseRepository"
         static let didAutoOpenSetup = "didAutoOpenSetup"
+        static let setupCompleted = "setupCompleted"
+        static let setupCompletedAt = "setupCompletedAt"
+        static let setupLastStep = "setupLastStep"
         static let keychainService = AppIdentity.keychainService
         static let githubTokenAccount = "github-release-token"
+        static let envDefaultsSuite = "JARVIS_APP_DEFAULTS_SUITE"
+        static let envJarvisRepoPath = "JARVIS_APP_JARVIS_REPO_PATH"
+        static let envJarvisPath = "JARVIS_APP_JARVIS_PATH"
+        static let envUVPath = "JARVIS_APP_UV_PATH"
+        static let envLogsPath = "JARVIS_APP_LOGS_PATH"
     }
 
     private static var defaultJarvisRepoPath: String {

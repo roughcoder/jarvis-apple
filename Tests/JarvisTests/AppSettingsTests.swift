@@ -69,8 +69,10 @@ final class AppSettingsTests: XCTestCase {
         let settings = AppSettings(defaults: defaults, keychain: KeychainStore())
 
         XCTAssertTrue(settings.shouldAutoOpenSetup)
-        settings.markSetupAutoOpened()
+        settings.markSetupCompleted(step: 6)
         XCTAssertFalse(settings.shouldAutoOpenSetup)
+        XCTAssertTrue(defaults.bool(forKey: "setupCompleted"))
+        XCTAssertEqual(defaults.integer(forKey: "setupLastStep"), 6)
     }
 
     @MainActor
@@ -79,6 +81,7 @@ final class AppSettingsTests: XCTestCase {
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         defaults.set(["brain"], forKey: "installedRoles")
+        defaults.set(true, forKey: "setupCompleted")
 
         let settings = AppSettings(defaults: defaults, keychain: KeychainStore())
 

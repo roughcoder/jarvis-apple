@@ -214,14 +214,26 @@ final class JarvisViewModel: ObservableObject {
         lastError = nil
     }
 
-    func installSelectedServices() async {
+    @discardableResult
+    func installSelectedServices() async -> Bool {
         guard !settings.installedRoles.isEmpty else {
             lastError = JarvisClientError.noInstalledRoles.localizedDescription
-            return
+            return false
+        }
+        if let testResult = ProcessInfo.processInfo.environment["JARVIS_APP_UI_TEST_SERVICE_INSTALL"] {
+            if testResult == "success" {
+                lastError = nil
+                lastCommandOutput = "UI test service installation succeeded."
+                return true
+            }
+            lastError = "UI test service installation failed."
+            lastCommandOutput = "ERROR: UI test service installation failed."
+            return false
         }
         if selectedServicesAreHealthy {
+            lastError = nil
             lastCommandOutput = "Selected Jarvis services are already healthy. Use Update Runtime or restart individual services if needed."
-            return
+            return true
         }
 
         let client = JarvisClient(configuration: settings.configuration)
@@ -263,10 +275,12 @@ final class JarvisViewModel: ObservableObject {
             append(refreshed.command, label: "fleet-status")
             activeOperation = nil
             lastError = nil
+            return true
         } catch {
             activeOperation = nil
             lastError = readableError(error)
             append("ERROR: \(readableError(error))")
+            return false
         }
     }
 

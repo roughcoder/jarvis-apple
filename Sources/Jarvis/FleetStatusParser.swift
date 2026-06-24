@@ -19,8 +19,10 @@ enum FleetStatusParser {
         let pairing = pairingSummary(root: root)
         let worker = workerSummary(root: root)
 
-        let overall = ([docker.level, git.level] + roles.map(\.level))
-            .max { $0.rank < $1.rank } ?? .unknown
+        let levels = [docker.level, git.level] + roles.map(\.level)
+        let actionableLevels = levels.filter { $0 != .unknown }
+        let overall = actionableLevels.max { $0.rank < $1.rank }
+            ?? (levels.contains(.unknown) ? .unknown : .green)
 
         return FleetStatus(
             version: version,
@@ -106,6 +108,14 @@ enum FleetStatusParser {
                 level = .green
             } else if loaded == true || reachable == true {
                 level = .amber
+            } else {
+                level = explicit ?? .unknown
+            }
+        case .whatsapp:
+            if loaded == false {
+                level = .red
+            } else if loaded == true {
+                level = .green
             } else {
                 level = explicit ?? .unknown
             }

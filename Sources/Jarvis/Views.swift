@@ -523,6 +523,8 @@ struct SetupGuideView: View {
             "Microphone, wake word, and speaker edge for this Mac."
         case .worker:
             "Browser, GUI, shell, and coding worker for this Mac."
+        case .whatsapp:
+            "Text channel with admin-approved WhatsApp onboarding."
         }
     }
 
@@ -1201,6 +1203,8 @@ private extension JarvisRole {
             return "Microphone, wake word, and speaker edge for this Mac."
         case .worker:
             return "Browser, GUI, shell, and coding worker for this Mac."
+        case .whatsapp:
+            return "Text channel with admin-approved WhatsApp onboarding."
         }
     }
 }

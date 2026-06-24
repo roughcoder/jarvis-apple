@@ -60,6 +60,24 @@ final class JarvisViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isMissingLaunchdService("Operation not permitted"))
     }
 
+    @MainActor
+    func testInstallSelectedServicesReturnsFalseWhenSyncFails() async throws {
+        let (settings, defaults) = makeSettings()
+        defer { defaults.removePersistentDomain(forName: defaultsSuiteName(defaults)) }
+        let checkout = try makeCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        settings.jarvisRepoPath = checkout.path
+        settings.uvPath = "/usr/bin/false"
+        settings.installedRoles = [.brain]
+        let viewModel = JarvisViewModel(settings: settings)
+
+        let installed = await viewModel.installSelectedServices()
+
+        XCTAssertFalse(installed)
+        XCTAssertNotNil(viewModel.lastError)
+        XCTAssertTrue(viewModel.lastCommandOutput.contains("ERROR:"))
+    }
+
     private func role(_ role: JarvisRole, _ level: StatusLevel) -> RoleStatus {
         RoleStatus(role: role, level: level, headline: level.title, detail: level.title, loaded: level == .green)
     }
@@ -86,6 +104,26 @@ final class JarvisViewModelTests: XCTestCase {
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.set(suiteName, forKey: "testSuiteName")
         return (AppSettings(defaults: defaults, keychain: KeychainStore()), defaults)
+    }
+
+    private func makeCheckout() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("JarvisViewModelCheckout-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(
+            at: directory.appendingPathComponent("src/jarvis"),
+            withIntermediateDirectories: true
+        )
+        try "name = \"jarvis\"\n".write(
+            to: directory.appendingPathComponent("pyproject.toml"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try "# test marker\n".write(
+            to: directory.appendingPathComponent("src/jarvis/cli.py"),
+            atomically: true,
+            encoding: .utf8
+        )
+        return directory
     }
 
     private func defaultsSuiteName(_ defaults: UserDefaults) -> String {

@@ -25,6 +25,10 @@ final class JarvisClientTests: XCTestCase {
                 "--workdir", JarvisClient.defaultInstalledWorkdir
             ]
         )
+        XCTAssertEqual(
+            client.setupReadArguments(envFile: "\(JarvisClient.defaultInstalledWorkdir)/.env"),
+            ["setup", "read", "--json", "--env-file", "\(JarvisClient.defaultInstalledWorkdir)/.env"]
+        )
     }
 
     func testInstalledInvocationCreatesWorkdirBeforeLaunch() throws {
@@ -268,6 +272,36 @@ final class JarvisClientTests: XCTestCase {
         XCTAssertEqual(
             client.serviceSyncArguments(roles: JarvisClient.orderedInstalledRoles(for: client.configuration.installedRoles)),
             ["service", "sync", "brain", "intercom"]
+        )
+    }
+
+    func testSetupArgumentsIncludeRolesAndEnvFile() {
+        let client = JarvisClient(configuration: configuration(
+            jarvisRepoPath: "/no/such/jarvis-checkout",
+            jarvisPath: "/opt/homebrew/bin/jarvis",
+            uvPath: "/no/such/uv"
+        ))
+
+        XCTAssertEqual(
+            client.setupApplyArguments(envFile: "~/.jarvis/.env"),
+            ["setup", "apply", "--json", "--env-file", "~/.jarvis/.env"]
+        )
+        XCTAssertEqual(
+            client.setupValidateArguments(roles: [.whatsapp, .brain, .intercom], envFile: "~/.jarvis/.env"),
+            [
+                "setup", "validate", "--json", "--env-file", "~/.jarvis/.env",
+                "--role", "brain",
+                "--role", "intercom",
+                "--role", "whatsapp"
+            ]
+        )
+        XCTAssertEqual(client.whatsappAuthArguments(account: "house"), ["whatsapp-auth", "--json", "--account", "house"])
+    }
+
+    func testOrderedRolesIncludeWhatsappLast() {
+        XCTAssertEqual(
+            JarvisClient.orderedInstalledRoles(for: [.whatsapp, .worker, .brain, .intercom]),
+            [.brain, .worker, .intercom, .whatsapp]
         )
     }
 
